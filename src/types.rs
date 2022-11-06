@@ -25,7 +25,3 @@ pub trait Distribution {
     fn variance(&self) -> f64;
     fn analyze(&self) -> Analysis;
 }
-
-pub trait Analyze {
-    fn analyze(&self) -> Analysis;
-}

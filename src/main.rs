@@ -34,7 +34,7 @@ pub enum Mode {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// X ~ B(n, p)
+    /// X ~ B(n, p)   P(win x times in n tries)
     Binom {
         #[arg(value_name = "TRIALS")]
         n: u64,
@@ -43,7 +43,7 @@ enum Commands {
         #[arg(value_name = "WINS")]
         x: Option<u64>,
     },
-    /// X ~ NB(k, p)
+    /// X ~ NB(k, p)  P(win kth time on the xth try)
     Nbinom {
         #[arg(value_name = "WINS")]
         k: u64,
@@ -52,7 +52,15 @@ enum Commands {
         #[arg(value_name = "TRIALS")]
         x: Option<u64>,
     },
+    /// X ~ G(p)      P(win once on the x+1th try)
+    Geom {
+        #[arg(value_name = "WIN_RATE")]
+        p: f64,
+        #[arg(value_name = "TRIALS")]
+        x: Option<u64>,
+    },
 }
+
 fn send(v: impl std::fmt::Display) {
     println!("{}", v);
 }
@@ -66,6 +74,10 @@ fn run(cli: Cli) -> Result<()> {
         }
         Commands::Nbinom { k, p, x } => {
             let nbinom = dist::NegativeBinomial::new(k, p, x)?;
+            send(nbinom.analyze().round());
+        }
+        Commands::Geom { p, x } => {
+            let nbinom = dist::Geometric::new(p, x)?;
             send(nbinom.analyze().round());
         }
     }

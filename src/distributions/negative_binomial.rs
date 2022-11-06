@@ -15,7 +15,7 @@ pub struct NegativeBinomial {
 /// X ~ NB(k, p)
 ///
 /// returns P(X = x)
-fn negative_binomial_pdf(k: u64, p: f64, x: u64) -> f64 {
+fn pdf(k: u64, p: f64, x: u64) -> f64 {
     if x < k {
         return 0.0;
     }
@@ -23,27 +23,27 @@ fn negative_binomial_pdf(k: u64, p: f64, x: u64) -> f64 {
 }
 
 #[test]
-fn negative_binomial_pdf_test() -> Result<()> {
-    assert_eq!(negative_binomial_pdf(2, 0.2, 5), 0.08192000000000009);
-    assert_eq!(negative_binomial_pdf(4, 0.7, 6), 0.21609000000000017);
+fn pdf_test() -> Result<()> {
+    assert_eq!(pdf(2, 0.2, 5), 0.08192000000000009);
+    assert_eq!(pdf(4, 0.7, 6), 0.21609000000000017);
     Ok(())
 }
 
 /// X ~ NB(k, p)
 ///
 /// returns P(X <= x)
-fn negative_binomial_cdf(n: u64, p: f64, x: u64) -> f64 {
-    range(0, x + 1, |i| negative_binomial_pdf(n, p, i))
+fn cdf(n: u64, p: f64, x: u64) -> f64 {
+    range(0, x + 1, |i| pdf(n, p, i))
 }
 
 #[test]
-fn negative_binomial_cdf_test() -> Result<()> {
+fn cdf_test() -> Result<()> {
     // use crate::r::r_debug;
     // let (k, p, x) = (2, 0.3, 9);
     // let x = x - k;
     // r_debug(&format!("pnbinom({x}, {k}, {p})"));
-    assert_eq!(negative_binomial_cdf(4, 0.7, 6), 0.7443100000000002);
-    assert_eq!(negative_binomial_cdf(2, 0.3, 9), 0.8039967659999997);
+    assert_eq!(cdf(4, 0.7, 6), 0.7443100000000002);
+    assert_eq!(cdf(2, 0.3, 9), 0.8039967659999997);
     Ok(())
 }
 
@@ -75,8 +75,8 @@ impl Distribution for NegativeBinomial {
             expected: self.expected(),
             variance: self.variance(),
             display: self.display(),
-            pdf_eval: self.x.map(|x| negative_binomial_pdf(self.k, self.p, x)),
-            cdf_eval: self.x.map(|x| negative_binomial_cdf(self.k, self.p, x)),
+            pdf_eval: self.x.map(|x| pdf(self.k, self.p, x)),
+            cdf_eval: self.x.map(|x| cdf(self.k, self.p, x)),
         }
     }
 }
