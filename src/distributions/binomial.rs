@@ -21,27 +21,11 @@ fn binomial_pdf(n: u64, p: f64, x: u64) -> f64 {
     p.pow(x) * (1.0 - p).pow(n - x) * choose(n, x) as f64
 }
 
-#[test]
-fn binomial_pdf_test() -> Result<()> {
-    assert_eq!(binomial_pdf(10, 0.2, 4), 0.08808038400000258);
-    assert_eq!(binomial_pdf(7, 0.3, 4), 0.09724049999999994);
-    assert_eq!(binomial_pdf(7, 1.0, 4), 0.0);
-    assert_eq!(binomial_pdf(7, 0.0, 4), 0.0);
-    Ok(())
-}
-
 /// X ~ B(n, p)
 ///
 /// returns P(X <= x)
 fn binomial_cdf(n: u64, p: f64, x: u64) -> f64 {
     (0..x + 1).fold(0.0, |acc, i| acc + binomial_pdf(n, p, i))
-}
-
-#[test]
-fn binomial_cdf_test() -> Result<()> {
-    assert_eq!(binomial_cdf(10, 0.2, 4), 0.9672065024000038);
-    assert_eq!(binomial_cdf(7, 0.7, 2), 0.02879549999999984);
-    Ok(())
 }
 
 impl Binomial {
@@ -76,4 +60,34 @@ impl Distribution for Binomial {
             cdf_eval: self.x.map(|x| binomial_cdf(self.n, self.p, x)),
         }
     }
+}
+
+#[test]
+fn binomial_pdf_test() -> Result<()> {
+    assert_eq!(binomial_pdf(10, 0.2, 4), 0.08808038400000258);
+    assert_eq!(binomial_pdf(7, 0.3, 4), 0.09724049999999994);
+    assert_eq!(binomial_pdf(7, 1.0, 4), 0.0);
+    assert_eq!(binomial_pdf(7, 0.0, 4), 0.0);
+    Ok(())
+}
+
+#[test]
+fn binomial_cdf_test() -> Result<()> {
+    assert_eq!(binomial_cdf(10, 0.2, 4), 0.9672065024000038);
+    assert_eq!(binomial_cdf(7, 0.7, 2), 0.02879549999999984);
+    Ok(())
+}
+
+#[test]
+fn exp_test() -> Result<()> {
+    assert_eq!(Binomial::new(10, 0.2, Some(3))?.expected(), 2.0);
+    assert_eq!(Binomial::new(10, 0.4, Some(7))?.expected(), 4.0);
+    Ok(())
+}
+
+#[test]
+fn var_test() -> Result<()> {
+    assert_eq!(Binomial::new(10, 0.2, Some(3))?.variance(), 1.6);
+    assert_eq!(Binomial::new(10, 0.4, Some(7))?.variance(), 2.4);
+    Ok(())
 }

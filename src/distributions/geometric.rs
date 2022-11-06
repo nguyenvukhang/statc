@@ -23,26 +23,11 @@ fn pdf(p: f64, x: u64) -> f64 {
     p * (1.0 - p).pow(x)
 }
 
-#[test]
-fn pdf_test() -> Result<()> {
-    assert_eq!(pdf(0.3, 0), 0.3);
-    assert_eq!(pdf(0.3, 2), 0.147);
-    assert_eq!(pdf(0.7, 6), 0.0005102999999999954);
-    Ok(())
-}
-
 /// X ~ G(p)
 ///
 /// returns P(X <= x)
 fn cdf(p: f64, x: u64) -> f64 {
     range(0, x + 1, |i| pdf(p, i))
-}
-
-#[test]
-fn cdf_test() -> Result<()> {
-    assert_eq!(cdf(0.7, 6), 0.9997812999999999);
-    assert_eq!(cdf(0.3, 9), 0.9717524751);
-    Ok(())
 }
 
 impl Geometric {
@@ -77,4 +62,33 @@ impl Distribution for Geometric {
             cdf_eval: self.x.map(|x| cdf(self.p, x)),
         }
     }
+}
+
+#[test]
+fn pdf_test() -> Result<()> {
+    assert_eq!(pdf(0.3, 0), 0.3);
+    assert_eq!(pdf(0.3, 2), 0.147);
+    assert_eq!(pdf(0.7, 6), 0.0005102999999999954);
+    Ok(())
+}
+
+#[test]
+fn cdf_test() -> Result<()> {
+    assert_eq!(cdf(0.7, 6), 0.9997812999999999);
+    assert_eq!(cdf(0.3, 9), 0.9717524751);
+    Ok(())
+}
+
+#[test]
+fn exp_test() -> Result<()> {
+    assert_eq!(Geometric::new(0.2, Some(3))?.expected(), 5.0);
+    assert_eq!(Geometric::new(0.4, Some(7))?.expected(), 2.5);
+    Ok(())
+}
+
+#[test]
+fn var_test() -> Result<()> {
+    assert_eq!(Geometric::new(0.2, Some(3))?.variance(), 19.999999999999982);
+    assert_eq!(Geometric::new(0.4, Some(7))?.variance(), 3.749999999999999);
+    Ok(())
 }
