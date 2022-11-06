@@ -1,5 +1,0 @@
-#!/usr/bin/env sh
-
-cargo build || exit 1
-
-./target/debug/stats $@
