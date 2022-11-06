@@ -1,10 +1,13 @@
-mod descriptions;
+mod display;
 mod distributions;
+mod math;
 mod prob;
 mod r;
+mod types;
 mod utils;
 
 use clap::{Parser, Subcommand, ValueEnum};
+use types::Distribution;
 use utils::Result;
 
 // refer to
@@ -33,25 +36,21 @@ pub enum Mode {
 enum Commands {
     /// X ~ B(n, p)
     Binom {
-        #[arg(value_enum)]
-        mode: Mode,
         #[arg(value_name = "TRIALS")]
         n: u64,
         #[arg(value_name = "WIN_RATE")]
         p: f64,
         #[arg(value_name = "WINS")]
-        x: u64,
+        x: Option<u64>,
     },
     /// X ~ NB(k, p)
     Nbinom {
-        #[arg(value_enum)]
-        mode: Mode,
         #[arg(value_name = "WINS")]
         k: u64,
         #[arg(value_name = "WIN_RATE")]
         p: f64,
         #[arg(value_name = "TRIALS")]
-        x: u64,
+        x: Option<u64>,
     },
 }
 fn send(v: impl std::fmt::Display) {
@@ -59,19 +58,14 @@ fn send(v: impl std::fmt::Display) {
 }
 
 fn run(cli: Cli) -> Result<()> {
-    let vprint = |v: &str| (!cli.quiet).then(|| println!("{}", v));
     match cli.command {
-        Commands::Binom { mode, n, p, x } => {
+        Commands::Binom { n, p, x } => {
             let binom = distributions::Binomial::new(n, p)?;
-            let result = binom.run(mode, x)?;
-            send(result);
-            vprint(&descriptions::binomial(mode, n, p, x));
+            let loaded = binom.load(x);
+            send(loaded.analyze());
         }
-        Commands::Nbinom { mode, k, p, x } => {
+        Commands::Nbinom { k, p, x } => {
             let nbinom = distributions::NegativeBinomial::new(k, p)?;
-            let result = nbinom.run(mode, x)?;
-            send(result);
-            vprint(&descriptions::negative_binomial(mode, k, p, x));
         }
     }
     Ok(())

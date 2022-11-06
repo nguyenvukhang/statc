@@ -6,11 +6,20 @@ cargo build
 STATS=./target/debug/stats
 
 title() {
-  printf "\nshell test: '$1'\n"
+  printf "\033[33m\nshell test: '$1'\033[0m\n"
 }
 
-title "binomial (eq)"
-$STATS binom eq 10 0.2 4
+end() {
+  printf "\033[33m-----\033[0m\n"
+}
 
-title "negative binomial (ge)"
-$STATS nbinom ge 2 0.2 9
+stats() {
+  title "$@"
+  eval $STATS $@
+  end
+}
+
+stats binom 10 0.2 4
+
+# title "negative binomial (ge)"
+# $STATS nbinom 2 0.2 9

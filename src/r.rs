@@ -13,8 +13,7 @@ fn num_from_stdout(out: std::process::Output) -> Result<f64> {
     };
     match res.is_nan() {
         true => err("Parsed a NaN value"),
-        false => Ok(res)
-
+        false => Ok(res),
     }
 }
 
@@ -24,8 +23,16 @@ fn rcmd() -> Command {
     r
 }
 
+/// for testing against R
+#[allow(dead_code)]
 pub fn r(r_code: &str) -> Result<f64> {
     let mut rcmd = rcmd();
     rcmd.arg(format!("cat(sprintf('%.12f',{}))", r_code));
     num_from_stdout(rcmd.output().map_err(|_| "Unable to spawn R.")?)
+}
+
+/// for testing against R
+#[allow(dead_code)]
+pub fn r_debug(r_code: &str) {
+    println!("{:?}", r(r_code));
 }

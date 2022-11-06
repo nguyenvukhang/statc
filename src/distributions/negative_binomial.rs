@@ -1,4 +1,4 @@
-use crate::prob::{AsProb};
+use crate::prob::AsProb;
 use crate::r::r;
 use crate::utils::Result;
 use crate::Mode;
