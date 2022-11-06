@@ -1,4 +1,4 @@
-use crate::math::{choose, MathOps};
+use crate::math::{choose, MathOps, range};
 use crate::prob::AsProb;
 use crate::types::Analysis;
 use crate::types::Distribution;
@@ -11,21 +11,17 @@ pub struct Binomial {
     x: Option<u64>,
 }
 
-/// X ~ B(n, p)
-///
-/// returns P(X = x)
-fn binomial_pdf(n: u64, p: f64, x: u64) -> f64 {
+/// X ~ B(n, p) -> P(X = x)
+fn pdf(n: u64, p: f64, x: u64) -> f64 {
     if x > n {
         return 0.0;
     }
     p.pow(x) * (1.0 - p).pow(n - x) * choose(n, x) as f64
 }
 
-/// X ~ B(n, p)
-///
-/// returns P(X <= x)
-fn binomial_cdf(n: u64, p: f64, x: u64) -> f64 {
-    (0..x + 1).fold(0.0, |acc, i| acc + binomial_pdf(n, p, i))
+/// X ~ B(n, p) -> P(X <= x)
+fn cdf(n: u64, p: f64, x: u64) -> f64 {
+    range(0, x + 1, |i| pdf(n, p, i))
 }
 
 impl Binomial {
@@ -56,25 +52,25 @@ impl Distribution for Binomial {
             expected: self.expected(),
             variance: self.variance(),
             display: self.display(),
-            pdf_eval: self.x.map(|x| binomial_pdf(self.n, self.p, x)),
-            cdf_eval: self.x.map(|x| binomial_cdf(self.n, self.p, x)),
+            pdf_eval: self.x.map(|x| pdf(self.n, self.p, x)),
+            cdf_eval: self.x.map(|x| cdf(self.n, self.p, x)),
         }
     }
 }
 
 #[test]
-fn binomial_pdf_test() -> Result<()> {
-    assert_eq!(binomial_pdf(10, 0.2, 4), 0.08808038400000258);
-    assert_eq!(binomial_pdf(7, 0.3, 4), 0.09724049999999994);
-    assert_eq!(binomial_pdf(7, 1.0, 4), 0.0);
-    assert_eq!(binomial_pdf(7, 0.0, 4), 0.0);
+fn pdf_test() -> Result<()> {
+    assert_eq!(pdf(10, 0.2, 4), 0.08808038400000258);
+    assert_eq!(pdf(7, 0.3, 4), 0.09724049999999994);
+    assert_eq!(pdf(7, 1.0, 4), 0.0);
+    assert_eq!(pdf(7, 0.0, 4), 0.0);
     Ok(())
 }
 
 #[test]
-fn binomial_cdf_test() -> Result<()> {
-    assert_eq!(binomial_cdf(10, 0.2, 4), 0.9672065024000038);
-    assert_eq!(binomial_cdf(7, 0.7, 2), 0.02879549999999984);
+fn cdf_test() -> Result<()> {
+    assert_eq!(cdf(10, 0.2, 4), 0.9672065024000038);
+    assert_eq!(cdf(7, 0.7, 2), 0.02879549999999984);
     Ok(())
 }
 

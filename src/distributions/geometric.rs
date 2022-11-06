@@ -11,9 +11,7 @@ pub struct Geometric {
     x: Option<u64>,
 }
 
-/// X ~ G(p)
-///
-/// returns P(X = x)
+/// X ~ G(p) -> P(X = x)
 ///
 /// Note that this variant of the Geometric Distribution finds the
 /// probability of winning for the first time on the (x + 1)th try.
@@ -23,9 +21,7 @@ fn pdf(p: f64, x: u64) -> f64 {
     p * (1.0 - p).pow(x)
 }
 
-/// X ~ G(p)
-///
-/// returns P(X <= x)
+/// X ~ G(p) -> P(X <= x)
 fn cdf(p: f64, x: u64) -> f64 {
     range(0, x + 1, |i| pdf(p, i))
 }

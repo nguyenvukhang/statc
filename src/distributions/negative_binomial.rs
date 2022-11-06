@@ -12,9 +12,7 @@ pub struct NegativeBinomial {
     x: Option<u64>,
 }
 
-/// X ~ NB(k, p)
-///
-/// returns P(X = x)
+/// X ~ NB(k, p) -> P(X = x)
 fn pdf(k: u64, p: f64, x: u64) -> f64 {
     if x < k {
         return 0.0;
@@ -22,9 +20,7 @@ fn pdf(k: u64, p: f64, x: u64) -> f64 {
     p.pow(k) * (1.0 - p).pow(x - k) * choose(x - 1, k - 1) as f64
 }
 
-/// X ~ NB(k, p)
-///
-/// returns P(X <= x)
+/// X ~ NB(k, p) -> P(X <= x)
 fn cdf(n: u64, p: f64, x: u64) -> f64 {
     range(0, x + 1, |i| pdf(n, p, i))
 }
@@ -90,7 +86,13 @@ fn exp_test() -> Result<()> {
 
 #[test]
 fn var_test() -> Result<()> {
-    assert_eq!(NegativeBinomial::new(10, 0.2, Some(3))?.variance(), 199.99999999999983);
-    assert_eq!(NegativeBinomial::new(10, 0.4, Some(7))?.variance(), 37.49999999999999);
+    assert_eq!(
+        NegativeBinomial::new(10, 0.2, Some(3))?.variance(),
+        199.99999999999983
+    );
+    assert_eq!(
+        NegativeBinomial::new(10, 0.4, Some(7))?.variance(),
+        37.49999999999999
+    );
     Ok(())
 }

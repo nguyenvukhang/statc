@@ -1,6 +1,8 @@
 mod binomial;
-mod negative_binomial;
 mod geometric;
-pub use binomial::*;
-pub use negative_binomial::*;
-pub use geometric::*;
+mod negative_binomial;
+mod poisson;
+pub use binomial::Binomial;
+pub use geometric::Geometric;
+pub use negative_binomial::NegativeBinomial;
+pub use poisson::Poisson;

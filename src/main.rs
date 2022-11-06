@@ -34,7 +34,7 @@ pub enum Mode {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// X ~ B(n, p)   P(win x times in n tries)
+    /// X ~ B(n, p)     P(win x times in n tries)
     Binom {
         #[arg(value_name = "TRIALS")]
         n: u64,
@@ -43,7 +43,7 @@ enum Commands {
         #[arg(value_name = "WINS")]
         x: Option<u64>,
     },
-    /// X ~ NB(k, p)  P(win kth time on the xth try)
+    /// X ~ NB(k, p)    P(win kth time on the xth try)
     Nbinom {
         #[arg(value_name = "WINS")]
         k: u64,
@@ -52,11 +52,18 @@ enum Commands {
         #[arg(value_name = "TRIALS")]
         x: Option<u64>,
     },
-    /// X ~ G(p)      P(win once on the x+1th try)
+    /// X ~ G(p)        P(win once on the x+1th try)
     Geom {
         #[arg(value_name = "WIN_RATE")]
         p: f64,
         #[arg(value_name = "TRIALS")]
+        x: Option<u64>,
+    },
+    /// X ~ Poisson(l)  P(get x hits in interval)
+    Pois {
+        #[arg(value_name = "EXPECTED")]
+        l: f64,
+        #[arg(value_name = "HITS")]
         x: Option<u64>,
     },
 }
@@ -69,16 +76,20 @@ fn run(cli: Cli) -> Result<()> {
     use distributions::{self as dist};
     match cli.command {
         Commands::Binom { n, p, x } => {
-            let binom = dist::Binomial::new(n, p, x)?;
-            send(binom.analyze().round());
+            let dist = dist::Binomial::new(n, p, x)?;
+            send(dist.analyze().round());
         }
         Commands::Nbinom { k, p, x } => {
-            let nbinom = dist::NegativeBinomial::new(k, p, x)?;
-            send(nbinom.analyze().round());
+            let dist = dist::NegativeBinomial::new(k, p, x)?;
+            send(dist.analyze().round());
         }
         Commands::Geom { p, x } => {
-            let nbinom = dist::Geometric::new(p, x)?;
-            send(nbinom.analyze().round());
+            let dist = dist::Geometric::new(p, x)?;
+            send(dist.analyze().round());
+        }
+        Commands::Pois { l, x } => {
+            let dist = dist::Poisson::new(l, x)?;
+            send(dist.analyze().round());
         }
     }
     Ok(())
