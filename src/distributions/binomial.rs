@@ -48,16 +48,12 @@ impl Binomial {
     pub fn new(n: u64, p: f64) -> Result<Self> {
         Ok(Self { p: f64::as_prob(p)?, n, x: None })
     }
+
     pub fn load(&self, x: Option<u64>) -> Self {
         Self { p: self.p, n: self.n, x }
     }
-    pub fn pdf(&self, x: u64) -> f64 {
-        binomial_pdf(self.n, self.p, x)
-    }
-    pub fn cdf(&self, x: u64) -> f64 {
-        binomial_cdf(self.n, self.p, x)
-    }
-    pub fn display(&self) -> String {
+
+    fn display(&self) -> String {
         let (n, p, x) = (self.n, self.p, self.x);
         match x {
             Some(x) => format!("X ~ B({n}, {p}), x = {x}"),
@@ -80,8 +76,8 @@ impl Distribution for Binomial {
             expected: self.expected(),
             variance: self.variance(),
             display: self.display(),
-            pdf_eval: self.x.map(|x| self.pdf(x)),
-            cdf_eval: self.x.map(|x| self.cdf(x)),
+            pdf_eval: self.x.map(|x| binomial_pdf(self.n, self.p, x)),
+            cdf_eval: self.x.map(|x| binomial_cdf(self.n, self.p, x)),
         }
     }
 }

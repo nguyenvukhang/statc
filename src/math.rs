@@ -35,6 +35,29 @@ impl MathOps for u64 {
     }
 }
 
+pub trait Round {
+    fn roundn(&self, decimals: u64) -> Self;
+}
+
+impl Round for f64 {
+    fn roundn(&self, decimals: u64) -> f64 {
+        let shift = 10.pow(decimals) as f64;
+        let res = self * shift;
+        let res = res.round();
+        let res = res / shift;
+        res
+    }
+}
+
+/// useful for calculating cumulative probability once
+/// Probability Density Function is known.
+pub fn range<F>(start: u64, end: u64, mut f: F) -> f64
+where
+    F: FnMut(u64) -> f64,
+{
+    (start..end).fold(0.0, |a, i| a + f(i))
+}
+
 #[test]
 fn choose_test() {
     assert_eq!(choose(10, 3), 120);

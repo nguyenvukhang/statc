@@ -17,3 +17,5 @@ stats() {
 
 stats binom 10 0.2 4
 stats binom 10 0.2
+
+stats nbinom 10 0.2

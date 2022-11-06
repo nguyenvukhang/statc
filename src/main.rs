@@ -62,10 +62,12 @@ fn run(cli: Cli) -> Result<()> {
         Commands::Binom { n, p, x } => {
             let binom = distributions::Binomial::new(n, p)?;
             let loaded = binom.load(x);
-            send(loaded.analyze());
+            send(loaded.analyze().round());
         }
         Commands::Nbinom { k, p, x } => {
             let nbinom = distributions::NegativeBinomial::new(k, p)?;
+            let loaded = nbinom.load(x);
+            send(loaded.analyze().round());
         }
     }
     Ok(())
