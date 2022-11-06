@@ -45,12 +45,8 @@ fn binomial_cdf_test() -> Result<()> {
 }
 
 impl Binomial {
-    pub fn new(n: u64, p: f64) -> Result<Self> {
-        Ok(Self { p: f64::as_prob(p)?, n, x: None })
-    }
-
-    pub fn load(&self, x: Option<u64>) -> Self {
-        Self { p: self.p, n: self.n, x }
+    pub fn new(n: u64, p: f64, x: Option<u64>) -> Result<Self> {
+        Ok(Self { p: f64::as_prob(p)?, n, x })
     }
 
     fn display(&self) -> String {

@@ -48,12 +48,8 @@ fn negative_binomial_cdf_test() -> Result<()> {
 }
 
 impl NegativeBinomial {
-    pub fn new(k: u64, p: f64) -> Result<Self> {
-        Ok(Self { p: f64::as_prob(p)?, k, x: None })
-    }
-
-    pub fn load(&self, x: Option<u64>) -> Self {
-        Self { p: self.p, k: self.k, x }
+    pub fn new(k: u64, p: f64, x: Option<u64>) -> Result<Self> {
+        Ok(Self { p: f64::as_prob(p)?, k, x })
     }
 
     fn display(&self) -> String {

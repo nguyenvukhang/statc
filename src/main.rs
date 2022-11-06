@@ -58,16 +58,15 @@ fn send(v: impl std::fmt::Display) {
 }
 
 fn run(cli: Cli) -> Result<()> {
+    use distributions::{self as dist};
     match cli.command {
         Commands::Binom { n, p, x } => {
-            let binom = distributions::Binomial::new(n, p)?;
-            let loaded = binom.load(x);
-            send(loaded.analyze().round());
+            let binom = dist::Binomial::new(n, p, x)?;
+            send(binom.analyze().round());
         }
         Commands::Nbinom { k, p, x } => {
-            let nbinom = distributions::NegativeBinomial::new(k, p)?;
-            let loaded = nbinom.load(x);
-            send(loaded.analyze().round());
+            let nbinom = dist::NegativeBinomial::new(k, p, x)?;
+            send(nbinom.analyze().round());
         }
     }
     Ok(())
