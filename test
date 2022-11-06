@@ -1,0 +1,16 @@
+#!/usr/bin/env sh
+
+cargo test || exit 1
+cargo build
+
+STATS=./target/debug/stats
+
+title() {
+  printf "\nshell test: |$1|\n"
+}
+
+title "BINOMIAL"
+$STATS -v binom -n 10 -p 0.2 -x 4
+
+title "NEGATIVE BINOMIAL"
+$STATS -v nbinom -k 2 -p 0.2 -x 9
