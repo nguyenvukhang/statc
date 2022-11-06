@@ -1,62 +1,66 @@
-use crate::distributions::{DiscreteCdf, DiscretePdf, DistributionMeta};
-use crate::math::{choose, MathOps};
-use crate::prob::{Meta, PWrap, P};
+use crate::prob::AsProb;
+use crate::r::r;
 use crate::utils::Result;
+use crate::Mode;
 
 #[derive(PartialEq, Debug)]
 pub struct Binomial {
-    trials: u64,
-    win_rate: P,
+    n: u64,
+    p: f64,
 }
 
 impl Binomial {
-    pub fn new(trials: u64, win_rate: P) -> Result<Self> {
-        Ok(Self { win_rate: P::new(win_rate)?, trials })
+    pub fn new(n: u64, p: f64) -> Result<Self> {
+        Ok(Self { p: f64::as_prob(p)?, n })
     }
-}
 
-impl DiscretePdf for Binomial {
-    /// Returns the probability of winning `wins` times, when trying a
-    /// total of `trials` times, with a win-rate of `win_rate`.
-    fn pdf(&self, wins: u64) -> P {
-        if wins > self.trials {
-            return 0.0;
+    // core R calls
+    fn eq(&self, x: u64) -> Result<f64> {
+        r(&format!("dbinom({x}, {}, {})", self.n, self.p))
+    }
+    fn le(&self, x: u64) -> Result<f64> {
+        r(&format!("pbinom({x}, {}, {})", self.n, self.p))
+    }
+    fn gt(&self, x: u64) -> Result<f64> {
+        r(&format!("pbinom({x}, {}, {}, lower.tail=F)", self.n, self.p))
+    }
+
+    // derivative functions
+    fn ge(&self, x: u64) -> Result<f64> {
+        Ok(self.gt(x)? + self.eq(x)?)
+    }
+    fn lt(&self, x: u64) -> Result<f64> {
+        Ok(self.le(x)? - self.eq(x)?)
+    }
+    pub fn run(&self, mode: Mode, x: u64) -> Result<f64> {
+        use Mode::*;
+        match mode {
+            Eq => self.eq(x),
+            Le => self.le(x),
+            Lt => self.lt(x),
+            Ge => self.ge(x),
+            Gt => self.gt(x),
         }
-        let mut r = 1.0;
-        r *= self.win_rate.pow(wins);
-        r *= (1.0 - self.win_rate).pow(self.trials - wins);
-        r *= choose(self.trials, wins) as P;
-        r
-    }
-}
-
-impl DiscreteCdf for Binomial {
-    /// Binomial Cumulative Distribution Function
-    fn cdf(&self, wins: u64) -> P {
-        (0..wins + 1).fold(0.0, |acc, x| acc + &self.pdf(x))
-    }
-}
-
-impl DistributionMeta for Binomial {
-    fn meta(&self) -> Meta {
-        let expected = self.trials as f64 * self.win_rate;
-        Meta { expected, variance: expected * (1.0 - self.win_rate) }
     }
 }
 
 #[test]
-fn binomial_pdf_test() -> Result<()> {
-    assert_eq!(Binomial::new(5, 0.2)?.pdf(2), 0.20480000000000023);
-    assert_eq!(Binomial::new(7, 0.3)?.pdf(4), 0.09724049999999994);
-    assert_eq!(Binomial::new(7, 1.0)?.pdf(3), 0.0);
-    assert_eq!(Binomial::new(7, 0.0)?.pdf(9), 0.0);
+fn binomial_eq_test() -> Result<()> {
+    assert_eq!(Binomial::new(10, 0.2)?.eq(4)?, 0.088080384);
+    assert_eq!(Binomial::new(7, 0.3)?.eq(4)?, 0.0972405);
+    assert_eq!(Binomial::new(7, 1.0)?.eq(3)?, 0.0);
+    assert_eq!(Binomial::new(7, 0.0)?.eq(9)?, 0.0);
     Ok(())
 }
 
 #[test]
-fn binomial_cdf_test() -> Result<()> {
-    assert_eq!(Binomial::new(7, 0.0)?.cdf(3), 1.0);
-    assert_eq!(Binomial::new(7, 0.25)?.cdf(3), 0.929443359375);
-    assert_eq!(Binomial::new(21, 0.73)?.cdf(8), 0.0008336333232230763);
+fn binomial_le_test() -> Result<()> {
+    assert_eq!(Binomial::new(10, 0.2)?.le(4)?, 0.9672065024);
+    Ok(())
+}
+
+#[test]
+fn binomial_gt_test() -> Result<()> {
+    assert_eq!(Binomial::new(10, 0.2)?.gt(4)?, 0.0327934976);
     Ok(())
 }

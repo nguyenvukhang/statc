@@ -1,44 +1,80 @@
-use crate::prob::{Meta, P};
-use std::fmt::Display;
+use crate::Mode;
 
-/// fancy-prints a title in full caps
-pub fn title(s: &str) {
-    println!("--- {} ---", s.to_uppercase());
+const WRAP_LEN: u64 = 69;
+
+fn wrap(s: String) -> String {
+    let mut count = 0;
+    let mut result = String::new();
+    for i in s.chars() {
+        result.push(i);
+        count += 1;
+        if count == WRAP_LEN {
+            count = 0;
+            let split = result.rsplit_once(' ');
+            if split.is_none() {
+                continue;
+            }
+            let split = split.unwrap();
+            let next = split.1.to_string();
+            result = split.0.to_string();
+            result.push('\n');
+            result.push_str(&next);
+        }
+    }
+    result
 }
 
-const MARGIN: usize = 16;
-
-fn margin(left: impl Display, right: impl Display) {
-    let (m, l) = (MARGIN, format!("{}", left));
-    let l = (0..m.checked_sub(l.len()).unwrap_or(1)).fold(l, |a, _| a + " ");
-    println!("{}| {}", l, right)
+fn ord_string(n: u64) -> String {
+    let mut n = n.to_string();
+    if n.ends_with("1") {
+        n.pop();
+        n.push_str("1st");
+    } else if n.ends_with("2") {
+        n.pop();
+        n.push_str("2nd");
+    } else if n.ends_with("3") {
+        n.pop();
+        n.push_str("3rd");
+    } else {
+        n.push_str("th");
+    }
+    n
 }
 
-pub const BINOMIAL: &str = "
-Probability of winning x times in n trials given a win-rate of p.";
-
-pub fn meta(meta: Meta) {
-    margin("expected", meta.expected);
-    margin("variance", meta.variance);
+impl Mode {
+    fn fmt(self, f: [&str; 5]) -> &str {
+        match self {
+            Mode::Lt => f[0],
+            Mode::Le => f[1],
+            Mode::Eq => f[2],
+            Mode::Ge => f[3],
+            Mode::Gt => f[4],
+        }
+    }
 }
 
-pub fn binomial(trials: u64, win_rate: P, wins: u64, pdf: P, cdf: P) {
-    margin("n: trials", trials);
-    margin("p: win-rate", win_rate);
-    margin("x: wins", wins);
-    margin("P(X = x)", pdf);
-    margin("P(X <= x)", cdf);
-    margin("P(X > x)", 1.0 - cdf);
+pub fn binomial(mode: Mode, trials: u64, win_rate: f64, wins: u64) -> String {
+    let mode =
+        mode.fmt(["less than", "at most", "exactly", "at least", "more than"]);
+    let res = format!("Probability of winning {mode} {wins} times in {trials} trials given a win-rate of {win_rate}.");
+    wrap(res)
 }
 
-pub const NEGATIVE_BINOMIAL: &str = "
-Probability of winning for the kth time on the nth trial given a
-win-rate of p.
-";
-
-pub fn negative_binomial(wins: u64, win_rate: P, trials: u64, p: P) {
-    margin("k: wins", wins);
-    margin("p: win-rate", win_rate);
-    margin("x: trials", trials);
-    margin("P(X = x)", p);
+pub fn negative_binomial(
+    mode: Mode,
+    wins: u64,
+    win_rate: f64,
+    trials: u64,
+) -> String {
+    let wins = ord_string(wins);
+    let trials = ord_string(trials);
+    let mode = mode.fmt([
+        "before the",
+        "before and including the",
+        "on the",
+        "after and including the",
+        "after the",
+    ]);
+    let res = format!("Probability of winning for the {wins} time {mode} {trials} trial given a win-rate of {win_rate}.");
+    wrap(res)
 }

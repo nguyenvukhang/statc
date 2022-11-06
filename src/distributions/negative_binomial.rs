@@ -1,47 +1,85 @@
-use crate::distributions::{DiscretePdf, DistributionMeta};
-use crate::math::{choose, MathOps};
-use crate::prob::{Meta, PWrap, P};
+use crate::prob::{AsProb};
+use crate::r::r;
 use crate::utils::Result;
+use crate::Mode;
 
 #[derive(PartialEq, Debug)]
 pub struct NegativeBinomial {
-    wins: u64,
-    win_rate: P,
+    k: u64,
+    p: f64,
+}
+
+fn diff(x: u64, k: u64) -> Result<u64> {
+    x.checked_sub(k).ok_or("Invalid parameters".to_string())
 }
 
 impl NegativeBinomial {
-    pub fn new(wins: u64, win_rate: P) -> Result<Self> {
-        Ok(Self { win_rate: P::new(win_rate)?, wins })
+    pub fn new(k: u64, p: f64) -> Result<Self> {
+        Ok(Self { p: f64::as_prob(p)?, k })
     }
-}
 
-impl DiscretePdf for NegativeBinomial {
-    fn pdf(&self, trials: u64) -> P {
-        if self.wins > trials {
-            return 0.0;
+    // core R calls
+    fn eq(&self, x: u64) -> Result<f64> {
+        if self.k > x {
+            return Ok(0.0);
         }
-        let mut r = 1.0;
-        r *= self.win_rate.pow(self.wins);
-        r *= (1.0 - self.win_rate).pow(trials - self.wins);
-        r *= choose(trials - 1, self.wins - 1) as P;
-        r
+        r(&format!("dnbinom({}, {}, {})", diff(x, self.k)?, self.k, self.p))
     }
-}
+    fn le(&self, x: u64) -> Result<f64> {
+        if self.k > x {
+            return Ok(0.0);
+        }
+        r(&format!("pnbinom({}, {}, {})", diff(x, self.k)?, self.k, self.p))
+    }
+    fn gt(&self, x: u64) -> Result<f64> {
+        if self.k > x {
+            return Ok(0.0);
+        }
+        r(&format!(
+            "pnbinom({}, {}, {}, lower.tail=F)",
+            diff(x, self.k)?,
+            self.k,
+            self.p
+        ))
+    }
 
-impl DistributionMeta for NegativeBinomial {
-    fn meta(&self) -> Meta {
-        let expected = self.wins as f64 / self.win_rate;
-        let (win_rate, loss_rate) = (self.win_rate, 1.0 - self.win_rate);
-        Meta { expected, variance: expected * loss_rate / win_rate }
+    // deriative functions
+    fn ge(&self, x: u64) -> Result<f64> {
+        Ok(self.gt(x)? + self.eq(x)?)
+    }
+    fn lt(&self, x: u64) -> Result<f64> {
+        Ok(self.le(x)? - self.eq(x)?)
+    }
+    pub fn run(&self, mode: Mode, x: u64) -> Result<f64> {
+        use Mode::*;
+        match mode {
+            Eq => self.eq(x),
+            Le => self.le(x),
+            Lt => self.lt(x),
+            Ge => self.ge(x),
+            Gt => self.gt(x),
+        }
     }
 }
 
 #[test]
-fn negative_binomial_pdf_test() -> Result<()> {
-    assert_eq!(NegativeBinomial::new(2, 0.23)?.pdf(4), 0.0940932299999999);
-    assert_eq!(NegativeBinomial::new(3, 0.69)?.pdf(9), 0.008163482508765649);
-    assert_eq!(NegativeBinomial::new(1, 0.19)?.pdf(5), 0.08178876990000002);
-    assert_eq!(NegativeBinomial::new(2, 1.0)?.pdf(5), 0.0);
-    assert_eq!(NegativeBinomial::new(7, 0.0)?.pdf(3), 0.0);
+fn negative_binomial_eq_test() -> Result<()> {
+    use crate::utils::err;
+    assert_eq!(NegativeBinomial::new(10, 0.2)?.eq(4)?, 0.0);
+    assert_eq!(NegativeBinomial::new(2, 0.3)?.eq(4)?, 0.1323);
+    assert_eq!(NegativeBinomial::new(2, 1.0)?.eq(3)?, 0.0);
+    assert_eq!(NegativeBinomial::new(2, 0.0)?.eq(9), err("Parsed a NaN value"));
+    Ok(())
+}
+
+#[test]
+fn negative_binomial_le_test() -> Result<()> {
+    assert_eq!(NegativeBinomial::new(1, 0.2)?.le(4)?, 0.5904);
+    Ok(())
+}
+
+#[test]
+fn negative_binomial_gt_test() -> Result<()> {
+    assert_eq!(NegativeBinomial::new(1, 0.2)?.gt(4)?, 0.4096);
     Ok(())
 }
