@@ -37,27 +37,26 @@ pub fn pdf_points<T: Display + Copy, F: Fn(T) -> f64>(
 }
 
 /// Takes a list of n points supplied by the user
-/// and maps them to n - 1 intervals calculated by c.d.f.
-/// Every interval is left < X <= right
+/// and maps them to n + 1 intervals calculated by c.d.f.
+/// * starts from P(X <= first element)
+/// * ends at P(X > last element)
 pub fn cdf_intervals<T: Display + Copy, F: Fn(T) -> f64>(
     list: &Vec<T>,
     cdf: F,
 ) -> Vec<PEval> {
-    if list.len() == 1 {
-        let hi = match list.get(0) {
-            Some(v) => v,
-            None => return vec![],
-        };
-        let desc = format!("P(X <= {hi})");
-        return vec![PEval::new(&desc, cdf(*hi))];
-    }
+    // first element: calculate P(X <= x)
+    let mut result = match list.first() {
+        None => return vec![],
+        Some(hi) => vec![PEval::new(&format!("P(X <= {hi})"), cdf(*hi))],
+    };
     let mut iter = list.iter().peekable();
-    let mut result = Vec::new();
+    let mut send = |d: &str, v: f64| result.push(PEval::new(&d, v));
     while let Some(lo) = iter.next() {
         if let Some(hi) = iter.peek() {
-            let desc = format!("P({lo} < X <= {hi})");
-            let val = cdf(**hi) - cdf(*lo);
-            result.push(PEval::new(&desc, val));
+            send(&format!("P({lo} < X <= {hi})"), cdf(**hi) - cdf(*lo));
+        } else {
+            // last element: calculate P(X > x)
+            send(&format!("P(X > {lo})"), 1.0 - cdf(*lo));
         }
     }
     return result;
@@ -67,7 +66,7 @@ pub fn cdf_intervals<T: Display + Copy, F: Fn(T) -> f64>(
 pub fn is_probability(p: &str) -> Result<f64> {
     let p: f64 = p.parse().map_err(|_| format!("`{}` isn't a number", p))?;
     if p < 0.0 || p > 1.0 {
-        return err("Probability values should be between 0 and 1.");
+        return err("Probability values must be between 0 and 1.");
     }
     Ok(p)
 }
