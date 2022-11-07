@@ -1,36 +1,107 @@
 #!/usr/bin/env sh
 
+PASS='\033[30m\033[1;42m PASS \033[0m'
+FAIL='\033[30m\033[1;41m FAIL \033[0m'
+
 cargo test || exit 1
 cargo build
+STATS=$PWD/target/debug/stats
+TMP_DIR=/tmp/stats_rs
 
-STATS=./target/debug/stats
-
-title() {
-  local str="$@"
-  printf "\033[32m>\033[37m $str\033[0m\n"
+cleanup() {
+  rm -rf $TMP_DIR
 }
+trap cleanup EXIT
+rm -rf $TMP_DIR && mkdir -p $TMP_DIR && cd $TMP_DIR
 
 stats() {
-  title stats "$@"
-  eval $STATS $@
+  echo "" >receieved.txt && eval $STATS $@ >>receieved.txt
+  TITLE="\033[0;37m$@\033[1;0m"
+}
+
+assert() {
+  echo "$EXPECT" >expected.txt
+  diff -y -W 70 receieved.txt expected.txt >/dev/null
+  local RC=$?
+  [[ $RC == 0 ]] && echo "$PASS $TITLE" || echo "$FAIL $TITLE"
+  [[ $RC -ne 0 ]] && exit 1 # fail fast
 }
 
 stats binom 10 0.2 4
+EXPECT="
+X ~ B(10, 0.2), x = 4
+expected  | 2
+variance  | 1.6
+P(X = x)  | 0.088080384
+P(X <= x) | 0.9672065024"
+assert
 
 stats nbinom 2 0.2 4
+EXPECT="
+X ~ NB(2, 0.2), x = 4
+expected  | 8
+variance  | 40
+P(X = x)  | 0.08192
+P(X <= x) | 0.34464"
+assert
 
 stats geom 0.2 4
+EXPECT="
+X ~ G(0.2), x = 4
+expected  | 5
+variance  | 20
+P(X = x)  | 0.1024
+P(X <= x) | 0.5904"
+assert
 
 stats pois 4.2 4
+EXPECT="
+X ~ Poisson(4.2), x = 4
+expected  | 4.2
+variance  | 4.2
+P(X = x)  | 0.1944236517
+P(X <= x) | 0.5898270213"
+assert
 
-stats unif 1.9 4.1 2.5
+stats unif 1.9 4.2 4
+EXPECT="
+X ~ U(1.9, 4.2), x = 4
+expected  | 3.05
+variance  | 0.4408333333
+p.d.f.    | 0.4347826087
+P(X <= 4) | 0.9130434783"
+assert
 
-stats unif 1.9 4.1 2.5 2.6
+stats unif 1.9 4.2 4 4.1
+EXPECT="
+X ~ U(1.9, 4.2), x in [4, 4.1]
+expected         | 3.05
+variance         | 0.4408333333
+P(X in [4, 4.1]) | 0.0434782609"
+assert
 
 stats exp 1.9 2.5 2.6
+EXPECT="
+X ~ Exp(1.9), x in [2.5, 2.6]
+expected           | 0.5263157895
+variance           | 0.2770083102
+P(X in [2.5, 2.6]) | 0.0014970968"
+assert
 
 stats exp 1.9 2.5
+EXPECT="
+X ~ Exp(1.9), x = 2.5
+expected    | 0.5263157895
+variance    | 0.2770083102
+p.d.f.      | 0.0164382209
+P(X <= 2.5) | 0.9913483048"
+assert
 
 stats exp 1.9
+EXPECT="
+X ~ Exp(1.9)
+expected | 0.5263157895
+variance | 0.2770083102"
+assert
 
 exit 0
