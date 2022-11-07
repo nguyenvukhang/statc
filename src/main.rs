@@ -72,6 +72,17 @@ enum Commands {
         #[arg(value_name = "UPPER_BOUND")]
         ub: Option<f64>,
     },
+    /// X ~ N(m, s²)    Normal distribution
+    Norm {
+        #[arg(value_name = "MEAN")]
+        m: f64,
+        #[arg(value_name = "STD_DEV")]
+        s: f64,
+        #[arg(value_name = "LOWER_BOUND")]
+        lb: Option<f64>,
+        #[arg(value_name = "UPPER_BOUND")]
+        ub: Option<f64>,
+    },
 }
 
 fn send(v: impl std::fmt::Display) {
@@ -103,6 +114,10 @@ fn run(cli: Cli) -> Result<()> {
         }
         Commands::Exp { l, lb, ub } => {
             let dist = dist::Exponential::new(l)?;
+            send(dist.analyze(lb, ub).round());
+        }
+        Commands::Norm { m, s, lb, ub } => {
+            let dist = dist::Normal::new(m, s)?;
             send(dist.analyze(lb, ub).round());
         }
     }
