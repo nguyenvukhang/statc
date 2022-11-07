@@ -340,6 +340,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "statc"
+version = "0.0.1"
+dependencies = [
+ "clap",
+ "statrs",
+]
+
+[[package]]
 name = "statrs"
 version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -350,14 +358,6 @@ dependencies = [
  "nalgebra",
  "num-traits",
  "rand",
-]
-
-[[package]]
-name = "stats"
-version = "0.0.1"
-dependencies = [
- "clap",
- "statrs",
 ]
 
 [[package]]

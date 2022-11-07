@@ -1,9 +1,17 @@
 [package]
-name = "stats"
+name = "statc"
 version = "0.0.1"
+authors = ["Nguyen Vu Khang <brew4k@gmail.com>"]
+description = """
+statc is essentially a TI-84 extended, geared towards statistical
+calculations and making data easily readable and obtainable.
+"""
+homepage = "https://github.com/nguyenvukhang/statc"
+repository = "https://github.com/nguyenvukhang/statc"
+documentation = "https://github.com/nguyenvukhang/statc"
+categories = ["command-line-utilities", "mathematics", "science"]
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+license = "MIT"
 
 [dependencies]
 clap = { version = "4.0.19", features = ["derive"] }
