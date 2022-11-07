@@ -26,9 +26,14 @@ enum Area {
     Right,
 }
 
+fn about(sym: &str, desc: &str) -> String {
+    let s = (0..16 - sym.chars().count()).fold(String::new(), |a, _| a + " ");
+    format!("{sym}{s}{desc}")
+}
+
 #[derive(Subcommand)]
 enum Commands {
-    /// X ~ B(n, p)     P(win x times in n tries)
+    #[command(about = about("X ~ B(n, p)", "P(win x times in n tries)"))]
     Binom {
         #[arg(value_name = "TRIALS")]
         n: u64,
@@ -37,7 +42,7 @@ enum Commands {
         #[arg(value_name = "WINS")]
         x: Vec<u64>,
     },
-    /// X ~ NB(k, p)    P(win kth time on the xth try)
+    #[command(about = about("X ~ NB(k, p)", "P(win kth time on the xth try)"))]
     Nbinom {
         #[arg(value_name = "WINS")]
         k: u64,
@@ -46,21 +51,21 @@ enum Commands {
         #[arg(value_name = "TRIALS")]
         x: Vec<u64>,
     },
-    /// X ~ G(p)        P(win once on the x+1th try)
+    #[command(about = about("X ~ G(p)", "P(win once on the x+1th try)"))]
     Geom {
         #[arg(value_name = "WIN_RATE", value_parser = utils::is_probability)]
         p: f64,
         #[arg(value_name = "TRIALS")]
         x: Vec<u64>,
     },
-    /// X ~ Poisson(l)  P(get x hits in interval)
+    #[command(about = about("X ~ Poisson(l)", "P(get x hits in interval)"))]
     Pois {
         #[arg(value_name = "EXPECTED")]
         l: f64,
         #[arg(value_name = "HITS")]
         x: Vec<u64>,
     },
-    /// X ~ U(a, b)     Uniform distribution
+    #[command(about = about("X ~ U(a, b)", "Uniform distribution"))]
     Unif {
         #[arg(value_name = "MIN")]
         a: f64,
@@ -69,14 +74,14 @@ enum Commands {
         #[arg(value_name = "KEY_POINTS")]
         x: Vec<f64>,
     },
-    /// X ~ Exp(l)      Exponential distribution
+    #[command(about = about("X ~ Exp(l)", "Exponential distribution"))]
     Exp {
         #[arg(value_name = "RATE")]
         l: f64,
         #[arg(value_name = "KEY_POINTS")]
         x: Vec<f64>,
     },
-    /// X ~ N(m, s^2)   Normal distribution
+    #[command(about = about("X ~ N(m, s²)", "Normal distribution"))]
     Norm {
         #[arg(value_name = "MEAN")]
         m: f64,
@@ -96,6 +101,7 @@ enum Commands {
         #[arg(value_name = "PROBABILITY", value_parser = utils::is_probability)]
         x: f64,
     },
+    #[command(hide = true)]
     Secret,
 }
 

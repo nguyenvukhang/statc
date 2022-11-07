@@ -122,4 +122,27 @@ P(3 < X <= 4) | 0.002845514
 P(4 < X <= 5) | 0.0004255996"
 assert
 
+stats norm 1.9 1 3
+EXPECT="
+X ~ N(1.9, 1²)
+expected  | 1.9
+variance  | 1
+P(X = 3)  | 0.217852177
+P(X <= 3) | 0.864333939"
+assert
+
+stats inorm 1.9 1 left 0.3
+EXPECT="
+X ~ N(1.9, 1²)
+P(X < 1.375599487291959) = 0.3"
+assert
+
+stats inorm 1.9 1 center 0.1
+EXPECT="
+X ~ N(1.9, 1²)
+a: left bound  | 1.774338653144926
+b: right bound | 2.025661346855074
+P(a < X <= b)  | 0.1"
+assert
+
 exit 0
