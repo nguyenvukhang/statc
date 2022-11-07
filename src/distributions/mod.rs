@@ -1,15 +1,15 @@
 mod binomial;
+mod exponential;
 mod geometric;
 mod negative_binomial;
+mod normal;
 mod poisson;
 mod uniform;
-mod exponential;
-mod normal;
 
 pub use binomial::Binomial;
+pub use exponential::Exponential;
 pub use geometric::Geometric;
 pub use negative_binomial::NegativeBinomial;
+pub use normal::Normal;
 pub use poisson::Poisson;
 pub use uniform::Uniform;
-pub use exponential::Exponential;
-pub use normal::Normal;

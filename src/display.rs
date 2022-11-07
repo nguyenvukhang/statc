@@ -48,8 +48,8 @@ impl Display for Analysis {
         let mut printer = Printer::new();
         printer.line("expected", self.expected);
         printer.line("variance", self.variance);
-        printer.line_eval(self.pdf_eval.as_ref());
-        printer.line_eval(self.cdf_eval.as_ref());
+        self.pdf_eval.iter().for_each(|v| printer.line_eval(Some(v)));
+        self.cdf_eval.iter().for_each(|v| printer.line_eval(Some(v)));
         write!(f, "{}\n{}", self.display, printer.build().trim_end())
     }
 }

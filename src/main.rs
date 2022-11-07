@@ -27,7 +27,7 @@ enum Commands {
         #[arg(value_name = "WIN_RATE")]
         p: f64,
         #[arg(value_name = "WINS")]
-        x: Option<u64>,
+        x: Vec<u64>,
     },
     /// X ~ NB(k, p)    P(win kth time on the xth try)
     Nbinom {
@@ -36,21 +36,21 @@ enum Commands {
         #[arg(value_name = "WIN_RATE")]
         p: f64,
         #[arg(value_name = "TRIALS")]
-        x: Option<u64>,
+        x: Vec<u64>,
     },
     /// X ~ G(p)        P(win once on the x+1th try)
     Geom {
         #[arg(value_name = "WIN_RATE")]
         p: f64,
         #[arg(value_name = "TRIALS")]
-        x: Option<u64>,
+        x: Vec<u64>,
     },
     /// X ~ Poisson(l)  P(get x hits in interval)
     Pois {
         #[arg(value_name = "EXPECTED")]
         l: f64,
         #[arg(value_name = "HITS")]
-        x: Option<u64>,
+        x: Vec<u64>,
     },
     /// X ~ U(a, b)     Uniform distribution
     Unif {
@@ -58,30 +58,24 @@ enum Commands {
         a: f64,
         #[arg(value_name = "MAX")]
         b: f64,
-        #[arg(value_name = "LOWER_BOUND")]
-        lb: Option<f64>,
-        #[arg(value_name = "UPPER_BOUND")]
-        ub: Option<f64>,
+        #[arg(value_name = "KEY_POINTS")]
+        x: Vec<f64>,
     },
     /// X ~ Exp(l)      Exponential distribution
     Exp {
         #[arg(value_name = "RATE")]
         l: f64,
-        #[arg(value_name = "LOWER_BOUND")]
-        lb: Option<f64>,
-        #[arg(value_name = "UPPER_BOUND")]
-        ub: Option<f64>,
+        #[arg(value_name = "KEY_POINTS")]
+        x: Vec<f64>,
     },
-    /// X ~ N(m, s²)    Normal distribution
+    /// X ~ N(m, s^2)   Normal distribution
     Norm {
         #[arg(value_name = "MEAN")]
         m: f64,
         #[arg(value_name = "STD_DEV")]
         s: f64,
-        #[arg(value_name = "LOWER_BOUND")]
-        lb: Option<f64>,
-        #[arg(value_name = "UPPER_BOUND")]
-        ub: Option<f64>,
+        #[arg(value_name = "KEY_POINTS")]
+        x: Vec<f64>,
     },
 }
 
@@ -94,31 +88,31 @@ fn run(cli: Cli) -> Result<()> {
     match cli.command {
         Commands::Binom { n, p, x } => {
             let dist = dist::Binomial::new(n, p)?;
-            send(dist.analyze(x, None).round());
+            send(dist.analyze(&x).round());
         }
         Commands::Nbinom { k, p, x } => {
             let dist = dist::NegativeBinomial::new(k, p)?;
-            send(dist.analyze(x, None).round());
+            send(dist.analyze(&x).round());
         }
         Commands::Geom { p, x } => {
             let dist = dist::Geometric::new(p)?;
-            send(dist.analyze(x, None).round());
+            send(dist.analyze(&x).round());
         }
         Commands::Pois { l, x } => {
             let dist = dist::Poisson::new(l)?;
-            send(dist.analyze(x, None).round());
+            send(dist.analyze(&x).round());
         }
-        Commands::Unif { a, b, lb, ub } => {
+        Commands::Unif { a, b, x } => {
             let dist = dist::Uniform::new(a, b)?;
-            send(dist.analyze(lb, ub).round());
+            send(dist.analyze(&x).round());
         }
-        Commands::Exp { l, lb, ub } => {
+        Commands::Exp { l, x } => {
             let dist = dist::Exponential::new(l)?;
-            send(dist.analyze(lb, ub).round());
+            send(dist.analyze(&x).round());
         }
-        Commands::Norm { m, s, lb, ub } => {
+        Commands::Norm { m, s, x } => {
             let dist = dist::Normal::new(m, s)?;
-            send(dist.analyze(lb, ub).round());
+            send(dist.analyze(&x).round());
         }
     }
     Ok(())

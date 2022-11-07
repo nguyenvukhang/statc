@@ -1,10 +1,9 @@
-use crate::types::Analysis;
-use crate::types::{PEval, Summary};
-use crate::utils::{Result, ResultOps};
-use statrs::distribution as SR;
-use statrs::distribution::{Continuous, ContinuousCDF};
-use statrs::statistics::*;
+use crate::types::{Analysis, Summary};
+use crate::utils::{cdf_intervals, pdf_points, Result, ResultOps};
+use statrs::distribution::{self as SR, Continuous, ContinuousCDF};
+use statrs::statistics::Distribution;
 
+/// continuous distribution
 pub struct Normal {}
 
 impl Normal {
@@ -14,35 +13,19 @@ impl Normal {
 }
 
 impl Summary<f64> for SR::Normal {
-    fn analyze(&self, x: Option<f64>, y: Option<f64>) -> Analysis {
+    fn analyze(&self, values: &Vec<f64>) -> Analysis {
         Analysis {
             expected: self.mean(),
             variance: self.variance(),
-            display: self.display(x, y),
-            pdf_eval: match y {
-                Some(_) => None,
-                None => PEval::new("p.d.f.", x.map(|x| self.pdf(x))),
-            },
-            cdf_eval: match (x, y) {
-                (Some(x), Some(y)) => PEval::new(
-                    &format!("P(X in [{x}, {y}])"),
-                    Some(self.cdf(y) - self.cdf(x)),
-                ),
-                (Some(x), None) => {
-                    PEval::new(&format!("P(X <= {x})"), Some(self.cdf(x)))
-                }
-                _ => None,
-            },
+            display: self.display(),
+            pdf_eval: pdf_points(values, |v| self.pdf(v), true),
+            cdf_eval: cdf_intervals(values, |v| self.cdf(v)),
         }
     }
 
-    fn display(&self, x: Option<f64>, y: Option<f64>) -> String {
+    fn display(&self) -> String {
         let u = |v: Option<f64>| v.map(|x| x.to_string()).unwrap_or("_".into());
         let (m, s) = (u(self.mean()), u(self.std_dev()));
-        match (x, y) {
-            (Some(x), Some(y)) => format!("X ~ N({m}, {s}), x in [{x}, {y}]"),
-            (Some(x), None) => format!("X ~ N({m}, {s}), x = {x}"),
-            _ => format!("X ~ N({m}, {s})"),
-        }
+        format!("X ~ N({m}, {s})")
     }
 }

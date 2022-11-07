@@ -10,7 +10,7 @@ impl PEval {
         Self { val: self.val.roundn(10), desc: self.desc.to_string() }
     }
     pub fn new(desc: &str, val: Option<f64>) -> Option<Self> {
-        Some(Self { val: val?, desc: desc.to_string() })
+        Some(Self { desc: desc.to_string(), val: val? })
     }
 }
 
@@ -18,8 +18,8 @@ pub struct Analysis {
     pub display: String,
     pub expected: Option<f64>,
     pub variance: Option<f64>,
-    pub pdf_eval: Option<PEval>,
-    pub cdf_eval: Option<PEval>,
+    pub pdf_eval: Vec<PEval>,
+    pub cdf_eval: Vec<PEval>,
 }
 
 impl Default for Analysis {
@@ -28,8 +28,8 @@ impl Default for Analysis {
             display: "null analysis".to_string(),
             expected: None,
             variance: None,
-            pdf_eval: None,
-            cdf_eval: None,
+            pdf_eval: Vec::new(),
+            cdf_eval: Vec::new(),
         }
     }
 }
@@ -40,13 +40,13 @@ impl Analysis {
             display: self.display.to_string(),
             expected: self.expected.map(|x| x.roundn(10)),
             variance: self.variance.map(|x| x.roundn(10)),
-            pdf_eval: self.pdf_eval.as_ref().map(|x| x.round()),
-            cdf_eval: self.cdf_eval.as_ref().map(|x| x.round()),
+            pdf_eval: self.pdf_eval.iter().map(|x| x.round()).collect(),
+            cdf_eval: self.cdf_eval.iter().map(|x| x.round()).collect(),
         }
     }
 }
 
 pub trait Summary<T> {
-    fn analyze(&self, x: Option<T>, y: Option<T>) -> Analysis;
-    fn display(&self, x: Option<T>, y: Option<T>) -> String;
+    fn analyze(&self, values: &Vec<T>) -> Analysis;
+    fn display(&self) -> String;
 }
