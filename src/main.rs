@@ -63,6 +63,15 @@ enum Commands {
         #[arg(value_name = "UPPER_BOUND")]
         ub: Option<f64>,
     },
+    /// X ~ Exp(l)      Exponential distribution
+    Exp {
+        #[arg(value_name = "RATE")]
+        l: f64,
+        #[arg(value_name = "LOWER_BOUND")]
+        lb: Option<f64>,
+        #[arg(value_name = "UPPER_BOUND")]
+        ub: Option<f64>,
+    },
 }
 
 fn send(v: impl std::fmt::Display) {
@@ -90,6 +99,10 @@ fn run(cli: Cli) -> Result<()> {
         }
         Commands::Unif { a, b, lb, ub } => {
             let dist = dist::Uniform::new(a, b)?;
+            send(dist.analyze(lb, ub).round());
+        }
+        Commands::Exp { l, lb, ub } => {
+            let dist = dist::Exponential::new(l)?;
             send(dist.analyze(lb, ub).round());
         }
     }

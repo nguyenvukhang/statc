@@ -27,4 +27,10 @@ stats unif 1.9 4.1 2.5
 
 stats unif 1.9 4.1 2.5 2.6
 
+stats exp 1.9 2.5 2.6
+
+stats exp 1.9 2.5
+
+stats exp 1.9
+
 exit 0
