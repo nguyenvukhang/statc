@@ -52,6 +52,17 @@ enum Commands {
         #[arg(value_name = "HITS")]
         x: Option<u64>,
     },
+    /// X ~ U(a, b)     Uniform distribution
+    Unif {
+        #[arg(value_name = "MIN")]
+        a: f64,
+        #[arg(value_name = "MAX")]
+        b: f64,
+        #[arg(value_name = "LOWER_BOUND")]
+        lb: Option<f64>,
+        #[arg(value_name = "UPPER_BOUND")]
+        ub: Option<f64>,
+    },
 }
 
 fn send(v: impl std::fmt::Display) {
@@ -63,19 +74,23 @@ fn run(cli: Cli) -> Result<()> {
     match cli.command {
         Commands::Binom { n, p, x } => {
             let dist = dist::Binomial::new(n, p)?;
-            send(dist.analyze(x).round());
+            send(dist.analyze(x, None).round());
         }
         Commands::Nbinom { k, p, x } => {
             let dist = dist::NegativeBinomial::new(k, p)?;
-            send(dist.analyze(x).round());
+            send(dist.analyze(x, None).round());
         }
         Commands::Geom { p, x } => {
             let dist = dist::Geometric::new(p)?;
-            send(dist.analyze(x).round());
+            send(dist.analyze(x, None).round());
         }
         Commands::Pois { l, x } => {
             let dist = dist::Poisson::new(l)?;
-            send(dist.analyze(x).round());
+            send(dist.analyze(x, None).round());
+        }
+        Commands::Unif { a, b, lb, ub } => {
+            let dist = dist::Uniform::new(a, b)?;
+            send(dist.analyze(lb, ub).round());
         }
     }
     Ok(())

@@ -23,4 +23,8 @@ stats geom 0.2 4
 
 stats pois 4.2 4
 
+stats unif 1.9 4.1 2.5
+
+stats unif 1.9 4.1 2.5 2.6
+
 exit 0
