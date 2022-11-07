@@ -6,29 +6,23 @@ const MARGIN: usize = 16;
 fn margin(left: impl Display, right: impl Display) -> String {
     let (m, l) = (MARGIN, format!("{}", left));
     let l = (0..m.checked_sub(l.len()).unwrap_or(1)).fold(l, |a, _| a + " ");
-    format!("{}| {}", l, right)
+    format!("{} | {}", l, right)
 }
 
-fn pushln(base: &mut String, line: &String) {
-    base.push_str(&line);
-    base.push('\n');
+fn line(s: &mut String, left: &str, data: Option<impl Display>) {
+    if let Some(data) = data {
+        s.push_str(&margin(left.to_owned() + ":", data));
+        s.push('\n');
+    }
 }
 
 impl Display for Analysis {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        let s = &mut String::new();
-        pushln(s, &self.display);
-        pushln(s, &margin("expected:", self.expected));
-        pushln(s, &margin("variance:", self.variance));
-        match self.pdf_eval {
-            Some(_) => {
-                let pdf_eval = self.pdf_eval.ok_or(fmt::Error)?;
-                let cdf_eval = self.cdf_eval.ok_or(fmt::Error)?;
-                pushln(s, &margin("P(X = x)", pdf_eval));
-                pushln(s, &margin("P(X <= x)", cdf_eval));
-            }
-            None => (),
-        };
+        let s = &mut (self.display.to_owned() + "\n");
+        line(s, "expected", self.expected);
+        line(s, "variance", self.variance);
+        line(s, "P(X = x)", self.pdf_eval);
+        line(s, "P(X <= x)", self.cdf_eval);
         write!(f, "{}", s.trim_end())
     }
 }

@@ -16,7 +16,11 @@ stats() {
 }
 
 stats binom 10 0.2 4
-stats binom 10 0.2
 
-stats nbinom 10 0.2
 stats nbinom 2 0.2 4
+
+stats geom 0.2 4
+
+stats pois 4.2 4
+
+exit 0

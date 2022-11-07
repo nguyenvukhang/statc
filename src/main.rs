@@ -1,18 +1,13 @@
 mod display;
 mod distributions;
 mod math;
-mod prob;
 mod r;
 mod types;
 mod utils;
 
-use clap::{Parser, Subcommand, ValueEnum};
-use types::Distribution;
+use clap::{Parser, Subcommand};
+use types::Summary;
 use utils::Result;
-
-// refer to
-// https://docs.rs/clap/latest/clap/_derive/_tutorial/index.html#subcommands
-// for help on subcommands
 
 #[derive(Parser)]
 #[command(arg_required_else_help = true)]
@@ -21,15 +16,6 @@ struct Cli {
     quiet: bool,
     #[command(subcommand)]
     command: Commands,
-}
-
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
-pub enum Mode {
-    Eq,
-    Lt,
-    Le,
-    Gt,
-    Ge,
 }
 
 #[derive(Subcommand)]
@@ -76,20 +62,20 @@ fn run(cli: Cli) -> Result<()> {
     use distributions::{self as dist};
     match cli.command {
         Commands::Binom { n, p, x } => {
-            let dist = dist::Binomial::new(n, p, x)?;
-            send(dist.analyze().round());
+            let dist = dist::Binomial::new(n, p)?;
+            send(dist.analyze(x).round());
         }
         Commands::Nbinom { k, p, x } => {
-            let dist = dist::NegativeBinomial::new(k, p, x)?;
-            send(dist.analyze().round());
+            let dist = dist::NegativeBinomial::new(k, p)?;
+            send(dist.analyze(x).round());
         }
         Commands::Geom { p, x } => {
-            let dist = dist::Geometric::new(p, x)?;
-            send(dist.analyze().round());
+            let dist = dist::Geometric::new(p)?;
+            send(dist.analyze(x).round());
         }
         Commands::Pois { l, x } => {
-            let dist = dist::Poisson::new(l, x)?;
-            send(dist.analyze().round());
+            let dist = dist::Poisson::new(l)?;
+            send(dist.analyze(x).round());
         }
     }
     Ok(())

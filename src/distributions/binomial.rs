@@ -1,89 +1,34 @@
-use crate::math::{choose, MathOps, range};
-use crate::prob::AsProb;
 use crate::types::Analysis;
-use crate::types::Distribution;
-use crate::utils::Result;
+use crate::types::Summary;
+use crate::utils::{Result, ResultOps};
+use statrs::distribution as SR;
+use statrs::distribution::{Discrete, DiscreteCDF};
+use statrs::statistics::Distribution;
 
-#[derive(PartialEq, Debug)]
-pub struct Binomial {
-    n: u64,
-    p: f64,
-    x: Option<u64>,
-}
-
-/// X ~ B(n, p) -> P(X = x)
-fn pdf(n: u64, p: f64, x: u64) -> f64 {
-    if x > n {
-        return 0.0;
-    }
-    p.pow(x) * (1.0 - p).pow(n - x) * choose(n, x) as f64
-}
-
-/// X ~ B(n, p) -> P(X <= x)
-fn cdf(n: u64, p: f64, x: u64) -> f64 {
-    range(0, x + 1, |i| pdf(n, p, i))
-}
+pub struct Binomial {}
 
 impl Binomial {
-    pub fn new(n: u64, p: f64, x: Option<u64>) -> Result<Self> {
-        Ok(Self { p: f64::as_prob(p)?, n, x })
+    pub fn new(n: u64, p: f64) -> Result<SR::Binomial> {
+        SR::Binomial::new(p, n).serr("Bad parameters.")
+    }
+}
+
+impl Summary for SR::Binomial {
+    fn analyze(&self, x: Option<u64>) -> Analysis {
+        Analysis {
+            expected: self.mean(),
+            variance: self.variance(),
+            display: self.display(x),
+            pdf_eval: x.map(|x| self.pmf(x)),
+            cdf_eval: x.map(|x| self.cdf(x)),
+        }
     }
 
-    fn display(&self) -> String {
-        let (n, p, x) = (self.n, self.p, self.x);
+    fn display(&self, x: Option<u64>) -> String {
+        let (n, p) = (self.n(), self.p());
         match x {
             Some(x) => format!("X ~ B({n}, {p}), x = {x}"),
             None => format!("X ~ B({n}, {p})"),
         }
     }
-}
-
-impl Distribution for Binomial {
-    fn expected(&self) -> f64 {
-        self.n as f64 * self.p
-    }
-
-    fn variance(&self) -> f64 {
-        self.expected() * (1.0 - self.p)
-    }
-
-    fn analyze(&self) -> Analysis {
-        Analysis {
-            expected: self.expected(),
-            variance: self.variance(),
-            display: self.display(),
-            pdf_eval: self.x.map(|x| pdf(self.n, self.p, x)),
-            cdf_eval: self.x.map(|x| cdf(self.n, self.p, x)),
-        }
-    }
-}
-
-#[test]
-fn pdf_test() -> Result<()> {
-    assert_eq!(pdf(10, 0.2, 4), 0.08808038400000258);
-    assert_eq!(pdf(7, 0.3, 4), 0.09724049999999994);
-    assert_eq!(pdf(7, 1.0, 4), 0.0);
-    assert_eq!(pdf(7, 0.0, 4), 0.0);
-    Ok(())
-}
-
-#[test]
-fn cdf_test() -> Result<()> {
-    assert_eq!(cdf(10, 0.2, 4), 0.9672065024000038);
-    assert_eq!(cdf(7, 0.7, 2), 0.02879549999999984);
-    Ok(())
-}
-
-#[test]
-fn exp_test() -> Result<()> {
-    assert_eq!(Binomial::new(10, 0.2, Some(3))?.expected(), 2.0);
-    assert_eq!(Binomial::new(10, 0.4, Some(7))?.expected(), 4.0);
-    Ok(())
-}
-
-#[test]
-fn var_test() -> Result<()> {
-    assert_eq!(Binomial::new(10, 0.2, Some(3))?.variance(), 1.6);
-    assert_eq!(Binomial::new(10, 0.4, Some(7))?.variance(), 2.4);
-    Ok(())
 }
