@@ -16,3 +16,4 @@ license = "MIT"
 [dependencies]
 clap = { version = "4.0.19", features = ["derive"] }
 statrs = "0.16.0"
+termion = "2.0.1"
