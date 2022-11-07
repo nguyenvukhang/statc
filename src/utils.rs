@@ -62,3 +62,12 @@ pub fn cdf_intervals<T: Display + Copy, F: Fn(T) -> f64>(
     }
     return result;
 }
+
+/// used for parsing probability values from CLI
+pub fn is_probability(p: &str) -> Result<f64> {
+    let p: f64 = p.parse().map_err(|_| format!("`{}` isn't a number", p))?;
+    if p < 0.0 || p > 1.0 {
+        return err("Probability values should be between 0 and 1.");
+    }
+    Ok(p)
+}

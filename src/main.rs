@@ -2,10 +2,11 @@ mod display;
 mod distributions;
 mod math;
 mod r;
+mod secret;
 mod types;
 mod utils;
 
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
 use types::Summary;
 use utils::Result;
 
@@ -18,13 +19,20 @@ struct Cli {
     command: Commands,
 }
 
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
+enum Placement {
+    Left,
+    Center,
+    Right,
+}
+
 #[derive(Subcommand)]
 enum Commands {
     /// X ~ B(n, p)     P(win x times in n tries)
     Binom {
         #[arg(value_name = "TRIALS")]
         n: u64,
-        #[arg(value_name = "WIN_RATE")]
+        #[arg(value_name = "WIN_RATE", value_parser = utils::is_probability)]
         p: f64,
         #[arg(value_name = "WINS")]
         x: Vec<u64>,
@@ -33,14 +41,14 @@ enum Commands {
     Nbinom {
         #[arg(value_name = "WINS")]
         k: u64,
-        #[arg(value_name = "WIN_RATE")]
+        #[arg(value_name = "WIN_RATE", value_parser = utils::is_probability)]
         p: f64,
         #[arg(value_name = "TRIALS")]
         x: Vec<u64>,
     },
     /// X ~ G(p)        P(win once on the x+1th try)
     Geom {
-        #[arg(value_name = "WIN_RATE")]
+        #[arg(value_name = "WIN_RATE", value_parser = utils::is_probability)]
         p: f64,
         #[arg(value_name = "TRIALS")]
         x: Vec<u64>,
@@ -77,6 +85,19 @@ enum Commands {
         #[arg(value_name = "KEY_POINTS")]
         x: Vec<f64>,
     },
+    /// Reverse-engineer the Normal distribution
+    Inorm {
+        #[arg(value_name = "MEAN")]
+        m: f64,
+        #[arg(value_name = "STD_DEV")]
+        s: f64,
+        /// Area/probability: has to be between 0 and 1.
+        #[arg(value_name = "AREA", value_parser = utils::is_probability)]
+        x: f64,
+        #[arg(value_name = "SIDE", value_enum)]
+        p: Placement,
+    },
+    Secret,
 }
 
 fn send(v: impl std::fmt::Display) {
@@ -113,6 +134,23 @@ fn run(cli: Cli) -> Result<()> {
         Commands::Norm { m, s, x } => {
             let dist = dist::Normal::new(m, s)?;
             send(dist.analyze(&x).round());
+        }
+        Commands::Inorm { m, s, x, p } => {
+            let dist = dist::Normal::new(m, s)?;
+            use statrs::distribution::*;
+            match p {
+                Placement::Left => send(dist.inverse_cdf(x)),
+                Placement::Right => send(-dist.inverse_cdf(x)),
+                Placement::Center => {
+                    let d = x / 2.0;
+                    let lo = dist.inverse_cdf(0.5 - d);
+                    let hi = dist.inverse_cdf(0.5 + d);
+                    send(format!("({lo}, {hi})"))
+                }
+            }
+        }
+        _ => {
+            println!("{}", secret::SECRET.trim());
         }
     }
     Ok(())
