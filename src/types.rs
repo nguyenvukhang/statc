@@ -9,8 +9,8 @@ impl PEval {
     fn round(&self) -> Self {
         Self { val: self.val.roundn(10), desc: self.desc.to_string() }
     }
-    pub fn new(desc: &str, val: Option<f64>) -> Option<Self> {
-        Some(Self { desc: desc.to_string(), val: val? })
+    pub fn new(desc: &str, val: f64) -> Self {
+        Self { desc: desc.to_string(), val }
     }
 }
 

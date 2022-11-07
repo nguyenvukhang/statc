@@ -33,7 +33,7 @@ pub fn pdf_points<T: Display + Copy, F: Fn(T) -> f64>(
         true => format!("P(X = {})", v),
         false => format!("pdf @ {}", v),
     };
-    list.iter().filter_map(|v| PEval::new(&msg(v), Some(pdf(*v)))).collect()
+    list.iter().map(|v| PEval::new(&msg(v), pdf(*v))).collect()
 }
 
 /// Takes a list of n points supplied by the user
@@ -49,7 +49,7 @@ pub fn cdf_intervals<T: Display + Copy, F: Fn(T) -> f64>(
             None => return vec![],
         };
         let desc = format!("P(X <= {hi})");
-        return vec![PEval::new(&desc, Some(cdf(*hi))).unwrap()];
+        return vec![PEval::new(&desc, cdf(*hi))];
     }
     let mut iter = list.iter().peekable();
     let mut result = Vec::new();
@@ -57,7 +57,7 @@ pub fn cdf_intervals<T: Display + Copy, F: Fn(T) -> f64>(
         if let Some(hi) = iter.peek() {
             let desc = format!("P({lo} < X <= {hi})");
             let val = cdf(**hi) - cdf(*lo);
-            result.push(PEval::new(&desc, Some(val)).unwrap());
+            result.push(PEval::new(&desc, val));
         }
     }
     return result;
