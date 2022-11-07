@@ -15,17 +15,30 @@ impl PEval {
 }
 
 pub struct Analysis {
-    pub display: String,
+    pub header: String,
     pub expected: Option<f64>,
     pub variance: Option<f64>,
     pub pdf_eval: Vec<PEval>,
     pub cdf_eval: Vec<PEval>,
 }
 
+pub struct PEvalList {
+    pub list: Vec<PEval>,
+}
+
+impl PEvalList {
+    pub fn push(&mut self, p: PEval) {
+        self.list.push(p);
+    }
+    pub fn new() -> Self {
+        Self { list: Vec::new() }
+    }
+}
+
 impl Default for Analysis {
     fn default() -> Analysis {
         Analysis {
-            display: "null analysis".to_string(),
+            header: "null analysis".to_string(),
             expected: None,
             variance: None,
             pdf_eval: Vec::new(),
@@ -37,7 +50,7 @@ impl Default for Analysis {
 impl Analysis {
     pub fn round(&self) -> Self {
         Self {
-            display: self.display.to_string(),
+            header: self.header.to_string(),
             expected: self.expected.map(|x| x.roundn(10)),
             variance: self.variance.map(|x| x.roundn(10)),
             pdf_eval: self.pdf_eval.iter().map(|x| x.round()).collect(),
@@ -48,5 +61,5 @@ impl Analysis {
 
 pub trait Summary<T> {
     fn analyze(&self, values: &Vec<T>) -> Analysis;
-    fn display(&self) -> String;
+    fn header(&self) -> String;
 }

@@ -17,13 +17,13 @@ impl Summary<f64> for SR::Exp {
         Analysis {
             expected: self.mean(),
             variance: self.variance(),
-            display: self.display(),
+            header: self.header(),
             pdf_eval: pdf_points(values, |v| self.pdf(v), true),
             cdf_eval: cdf_intervals(values, |v| self.cdf(v)),
         }
     }
 
-    fn display(&self) -> String {
+    fn header(&self) -> String {
         let l = self.rate();
         format!("X ~ Exp({l})")
     }

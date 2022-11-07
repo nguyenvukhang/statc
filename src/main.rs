@@ -7,7 +7,7 @@ mod types;
 mod utils;
 
 use clap::{Parser, Subcommand, ValueEnum};
-use types::Summary;
+use types::{PEval, PEvalList, Summary};
 use utils::Result;
 
 #[derive(Parser)]
@@ -20,7 +20,7 @@ struct Cli {
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
-enum Placement {
+enum Area {
     Left,
     Center,
     Right,
@@ -91,11 +91,10 @@ enum Commands {
         m: f64,
         #[arg(value_name = "STD_DEV")]
         s: f64,
-        /// Area/probability: has to be between 0 and 1.
-        #[arg(value_name = "AREA", value_parser = utils::is_probability)]
+        #[arg(value_name = "AREA", value_enum)]
+        a: Area,
+        #[arg(value_name = "PROBABILITY", value_parser = utils::is_probability)]
         x: f64,
-        #[arg(value_name = "SIDE", value_enum)]
-        p: Placement,
     },
     Secret,
 }
@@ -135,17 +134,28 @@ fn run(cli: Cli) -> Result<()> {
             let dist = dist::Normal::new(m, s)?;
             send(dist.analyze(&x).round());
         }
-        Commands::Inorm { m, s, x, p } => {
+        Commands::Inorm { m, s, x, a } => {
             let dist = dist::Normal::new(m, s)?;
-            use statrs::distribution::*;
-            match p {
-                Placement::Left => send(dist.inverse_cdf(x)),
-                Placement::Right => send(-dist.inverse_cdf(x)),
-                Placement::Center => {
+            use statrs::distribution::ContinuousCDF;
+            send(dist.header());
+            match a {
+                Area::Left => {
+                    let res = dist.inverse_cdf(x);
+                    send(format!("P(X < {res}) = {x}"));
+                }
+                Area::Right => {
+                    let res = -dist.inverse_cdf(x);
+                    send(format!("P(X > {res}) = {x}"));
+                }
+                Area::Center => {
+                    let mut plist = PEvalList::new();
                     let d = x / 2.0;
                     let lo = dist.inverse_cdf(0.5 - d);
                     let hi = dist.inverse_cdf(0.5 + d);
-                    send(format!("({lo}, {hi})"))
+                    plist.push(PEval::new("a: left bound", lo));
+                    plist.push(PEval::new("b: right bound", hi));
+                    plist.push(PEval::new(&format!("P(a < X <= b)"), x));
+                    send(plist);
                 }
             }
         }

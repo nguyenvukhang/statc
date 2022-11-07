@@ -1,4 +1,4 @@
-use crate::types::{Analysis, PEval};
+use crate::types::{Analysis, PEval, PEvalList};
 use std::fmt::{self, Display, Formatter};
 
 fn margin(left: impl Display, right: impl Display, margin: usize) -> String {
@@ -10,11 +10,12 @@ fn margin(left: impl Display, right: impl Display, margin: usize) -> String {
 struct Printer {
     margin: usize,
     lines: Vec<[String; 2]>,
+    build: String,
 }
 
 impl Printer {
     fn new() -> Self {
-        Self { margin: 0, lines: Vec::new() }
+        Self { margin: 0, lines: Vec::new(), build: String::new() }
     }
 
     fn word(&mut self, w: &str) {
@@ -28,18 +29,32 @@ impl Printer {
         }
     }
 
-    fn line_eval(&mut self, p_eval: Option<&PEval>) {
-        if let Some(p_eval) = p_eval {
-            let left = p_eval.desc.to_string();
-            self.word(&left);
-            self.lines.push([left, p_eval.val.to_string()]);
-        }
+    fn line_eval(&mut self, p_eval: &PEval) {
+        let left = p_eval.desc.to_string();
+        self.word(&left);
+        self.lines.push([left, p_eval.val.to_string()]);
     }
 
     fn build(&self) -> String {
-        self.lines.iter().fold(String::new(), |s, l| {
+        let mut build = self.lines.iter().fold(String::new(), |s, l| {
             format!("{}{}\n", s, margin(&l[0], &l[1], self.margin))
-        })
+        });
+        build.pop(); // remove last newline
+        build
+    }
+
+    fn set_header(&mut self, title: &str) {
+        if self.build.is_empty() && !title.is_empty() {
+            self.build.push_str(title);
+        }
+    }
+
+    fn flush(&mut self, f: &mut Formatter) -> fmt::Result {
+        if !self.build.is_empty() {
+            self.build.push('\n');
+        }
+        self.build.push_str(&self.build());
+        write!(f, "{}", self.build)
     }
 }
 
@@ -48,8 +63,17 @@ impl Display for Analysis {
         let mut printer = Printer::new();
         printer.line("expected", self.expected);
         printer.line("variance", self.variance);
-        self.pdf_eval.iter().for_each(|v| printer.line_eval(Some(v)));
-        self.cdf_eval.iter().for_each(|v| printer.line_eval(Some(v)));
-        write!(f, "{}\n{}", self.display, printer.build().trim_end())
+        self.pdf_eval.iter().for_each(|v| printer.line_eval(v));
+        self.cdf_eval.iter().for_each(|v| printer.line_eval(v));
+        printer.set_header(&self.header);
+        printer.flush(f)
+    }
+}
+
+impl Display for PEvalList {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        let mut printer = Printer::new();
+        self.list.iter().for_each(|v| printer.line_eval(&v));
+        printer.flush(f)
     }
 }

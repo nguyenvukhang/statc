@@ -17,13 +17,13 @@ impl Summary<f64> for SR::Uniform {
         Analysis {
             expected: self.mean(),
             variance: self.variance(),
-            display: self.display(),
+            header: self.header(),
             pdf_eval: pdf_points(values, |v| self.pdf(v), false),
             cdf_eval: cdf_intervals(values, |v| self.cdf(v)),
         }
     }
 
-    fn display(&self) -> String {
+    fn header(&self) -> String {
         let (a, b) = (self.min(), self.max());
         format!("X ~ U({a}, {b})")
     }

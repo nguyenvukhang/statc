@@ -17,13 +17,13 @@ impl Summary<u64> for SR::NegativeBinomial {
         Analysis {
             expected: self.mean(),
             variance: self.variance(),
-            display: self.display(),
+            header: self.header(),
             pdf_eval: pdf_points(values, |v| self.pmf(v), true),
             cdf_eval: cdf_intervals(values, |v| self.cdf(v)),
         }
     }
 
-    fn display(&self) -> String {
+    fn header(&self) -> String {
         let (k, p) = (self.r(), self.p());
         format!("X ~ NB({k}, {p})")
     }

@@ -17,13 +17,13 @@ impl Summary<u64> for SR::Binomial {
         Analysis {
             expected: self.mean(),
             variance: self.variance(),
-            display: self.display(),
+            header: self.header(),
             pdf_eval: pdf_points(values, |v| self.pmf(v), true),
             cdf_eval: cdf_intervals(values, |v| self.cdf(v)),
         }
     }
 
-    fn display(&self) -> String {
+    fn header(&self) -> String {
         let (n, p) = (self.n(), self.p());
         format!("X ~ B({n}, {p})")
     }
