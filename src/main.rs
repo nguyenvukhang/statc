@@ -90,7 +90,7 @@ enum Commands {
         #[arg(value_name = "KEY_POINTS")]
         x: Vec<f64>,
     },
-    #[command(about = about("X ~ χ²(n)", "Chi-Squared distribution"))]
+    #[command(about = about("X ~ χ²(n)", "Chi-squared distribution"))]
     Chisq {
         /// degrees of freedom
         #[arg(value_name = "FREEDOM")]
@@ -106,6 +106,14 @@ enum Commands {
         s: f64,
         #[arg(value_name = "AREA", value_enum)]
         a: Area,
+        #[arg(value_name = "PROBABILITY", value_parser = utils::is_probability)]
+        x: f64,
+    },
+    /// Reverse-engineer the Chi-squared distribution
+    Ichisq {
+        /// degrees of freedom
+        #[arg(value_name = "FREEDOM")]
+        n: u64,
         #[arg(value_name = "PROBABILITY", value_parser = utils::is_probability)]
         x: f64,
     },
@@ -151,6 +159,13 @@ fn run(cli: Cli) -> Result<()> {
         Commands::Chisq { n, x } => {
             let dist = dist::ChiSquared::new(n)?;
             send(dist.analyze(&x).round());
+        }
+        Commands::Ichisq { n, x } => {
+            let dist = dist::ChiSquared::new(n)?;
+            use statrs::distribution::ContinuousCDF;
+            send(dist.header());
+            let res = dist.inverse_cdf(1.0 - x);
+            send(format!("P(X > {res}) = {x}"));
         }
         Commands::Inorm { m, s, x, a } => {
             let dist = dist::Normal::new(m, s)?;
