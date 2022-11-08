@@ -90,6 +90,14 @@ enum Commands {
         #[arg(value_name = "KEY_POINTS")]
         x: Vec<f64>,
     },
+    #[command(about = about("X ~ χ²(n)", "Chi-Squared distribution"))]
+    Chisq {
+        /// degrees of freedom
+        #[arg(value_name = "FREEDOM")]
+        n: u64,
+        #[arg(value_name = "KEY_POINTS")]
+        x: Vec<f64>,
+    },
     /// Reverse-engineer the Normal distribution
     Inorm {
         #[arg(value_name = "MEAN")]
@@ -138,6 +146,10 @@ fn run(cli: Cli) -> Result<()> {
         }
         Commands::Norm { m, s, x } => {
             let dist = dist::Normal::new(m, s)?;
+            send(dist.analyze(&x).round());
+        }
+        Commands::Chisq { n, x } => {
+            let dist = dist::ChiSquared::new(n)?;
             send(dist.analyze(&x).round());
         }
         Commands::Inorm { m, s, x, a } => {

@@ -5,6 +5,7 @@ mod negative_binomial;
 mod normal;
 mod poisson;
 mod uniform;
+mod chi_squared;
 
 pub use binomial::Binomial;
 pub use exponential::Exponential;
@@ -13,3 +14,4 @@ pub use negative_binomial::NegativeBinomial;
 pub use normal::Normal;
 pub use poisson::Poisson;
 pub use uniform::Uniform;
+pub use chi_squared::ChiSquared;
