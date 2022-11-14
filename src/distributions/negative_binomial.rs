@@ -14,12 +14,17 @@ impl NegativeBinomial {
 
 impl Summary<u64> for SR::NegativeBinomial {
     fn analyze(&self, values: &Vec<u64>) -> Analysis {
+        // let values = &values.iter().map(|v| v - 2).collect();
         Analysis {
             expected: self.mean(),
             variance: self.variance(),
             header: self.header(),
-            pdf_eval: pdf_points(values, |v| self.pmf(v), true),
-            cdf_eval: cdf_intervals(values, |v| self.cdf(v)),
+            pdf_eval: pdf_points(
+                values,
+                |v| self.pmf(v - self.r() as u64),
+                true,
+            ),
+            cdf_eval: cdf_intervals(values, |v| self.cdf(v - self.r() as u64)),
         }
     }
 
