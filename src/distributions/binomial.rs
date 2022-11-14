@@ -1,3 +1,4 @@
+use crate::distributions::INFO;
 use crate::types::{Analysis, Summary};
 use crate::utils::{cdf_intervals, pdf_points, Result, ResultOps};
 use statrs::distribution::{self as SR, Discrete, DiscreteCDF};
@@ -18,7 +19,11 @@ impl Summary<u64> for SR::Binomial {
             expected: self.mean(),
             variance: self.variance(),
             header: self.header(),
-            pdf_eval: pdf_points(values, |v| self.pmf(v), true),
+            pdf_eval: pdf_points(
+                values,
+                |v| self.pmf(v),
+                INFO.binomial.discrete,
+            ),
             cdf_eval: cdf_intervals(values, |v| self.cdf(v)),
         }
     }

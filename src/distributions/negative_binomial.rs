@@ -1,7 +1,7 @@
+use crate::distributions::INFO;
 use crate::types::{Analysis, Summary};
 use crate::utils::{cdf_intervals, pdf_points, Result, ResultOps};
 use statrs::distribution::{self as SR, Discrete, DiscreteCDF};
-use statrs::statistics::DiscreteDistribution;
 
 /// discrete distribution
 pub struct NegativeBinomial {}
@@ -14,15 +14,15 @@ impl NegativeBinomial {
 
 impl Summary<u64> for SR::NegativeBinomial {
     fn analyze(&self, values: &Vec<u64>) -> Analysis {
-        // let values = &values.iter().map(|v| v - 2).collect();
+        let (k, p) = (self.r(), self.p());
         Analysis {
-            expected: self.mean(),
-            variance: self.variance(),
+            expected: Some(k / p),
+            variance: Some((1.0 - p) * k / p / p),
             header: self.header(),
             pdf_eval: pdf_points(
                 values,
                 |v| self.pmf(v - self.r() as u64),
-                true,
+                INFO.negative_binomial.discrete,
             ),
             cdf_eval: cdf_intervals(values, |v| self.cdf(v - self.r() as u64)),
         }

@@ -62,11 +62,22 @@ pub fn cdf_intervals<T: Display + Copy, F: Fn(T) -> f64>(
     return result;
 }
 
-/// used for parsing probability values from CLI
-pub fn is_probability(p: &str) -> Result<f64> {
-    let p: f64 = p.parse().map_err(|_| format!("`{}` isn't a number", p))?;
+pub fn eval(s: &str) -> Result<f64> {
+    return meval::eval_str(s).serr("Bad input.");
+}
+
+pub fn eval_prob(s: &str) -> Result<f64> {
+    let p = meval::eval_str(s).serr("Bad input.")?;
     if p < 0.0 || p > 1.0 {
         return err("Probability values must be between 0 and 1.");
     }
     Ok(p)
+}
+
+pub fn eval_u64(s: &str) -> Result<u64> {
+    let v = meval::eval_str(s).serr("Bad input.")?;
+    match v.fract() > 1e-10 {
+        true => err("Not an integer."),
+        false => Ok(v as u64),
+    }
 }

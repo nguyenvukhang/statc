@@ -35,87 +35,92 @@ fn about(sym: &str, desc: &str) -> String {
 enum Commands {
     #[command(about = about("X ~ B(n, p)", "P(win x times in n tries)"))]
     Binom {
-        #[arg(value_name = "TRIALS")]
+        #[arg(value_name = "TRIALS", value_parser = utils::eval_u64)]
         n: u64,
-        #[arg(value_name = "WIN_RATE", value_parser = utils::is_probability)]
+        #[arg(value_name = "WIN_RATE", value_parser = utils::eval_prob)]
         p: f64,
-        #[arg(value_name = "WINS")]
+        #[arg(value_name = "WINS", value_parser = utils::eval_u64)]
         x: Vec<u64>,
     },
     #[command(about = about("X ~ NB(k, p)", "P(win kth time on the xth try)"))]
     Nbinom {
-        #[arg(value_name = "WINS")]
+        #[arg(value_name = "WINS", value_parser = utils::eval_u64)]
         k: u64,
-        #[arg(value_name = "WIN_RATE", value_parser = utils::is_probability)]
+        #[arg(value_name = "WIN_RATE", value_parser = utils::eval_prob)]
         p: f64,
-        #[arg(value_name = "TRIALS")]
+        #[arg(value_name = "TRIALS", value_parser = utils::eval_u64)]
         x: Vec<u64>,
     },
     #[command(about = about("X ~ G(p)", "P(win once on the x+1th try)"))]
     Geom {
-        #[arg(value_name = "WIN_RATE", value_parser = utils::is_probability)]
+        #[arg(value_name = "WIN_RATE", value_parser = utils::eval_prob)]
         p: f64,
-        #[arg(value_name = "TRIALS")]
+        #[arg(value_name = "TRIALS", value_parser = utils::eval_u64)]
         x: Vec<u64>,
     },
     #[command(about = about("X ~ Poisson(l)", "P(get x hits in interval)"))]
     Pois {
-        #[arg(value_name = "EXPECTED")]
+        #[arg(value_name = "EXPECTED", value_parser = utils::eval)]
         l: f64,
-        #[arg(value_name = "HITS")]
+        #[arg(value_name = "HITS", value_parser = utils::eval_u64)]
         x: Vec<u64>,
     },
     #[command(about = about("X ~ U(a, b)", "Uniform distribution"))]
     Unif {
-        #[arg(value_name = "MIN")]
+        #[arg(value_name = "MIN", value_parser = utils::eval)]
         a: f64,
-        #[arg(value_name = "MAX")]
+        #[arg(value_name = "MAX", value_parser = utils::eval)]
         b: f64,
-        #[arg(value_name = "KEY_POINTS")]
+        #[arg(value_name = "KEY_POINTS", value_parser = utils::eval)]
         x: Vec<f64>,
     },
     #[command(about = about("X ~ Exp(l)", "Exponential distribution"))]
     Exp {
-        #[arg(value_name = "RATE")]
+        #[arg(value_name = "RATE", value_parser = utils::eval)]
         l: f64,
-        #[arg(value_name = "KEY_POINTS")]
+        #[arg(value_name = "KEY_POINTS", value_parser = utils::eval)]
         x: Vec<f64>,
     },
     #[command(about = about("X ~ N(m, s²)", "Normal distribution"))]
     Norm {
-        #[arg(value_name = "MEAN")]
+        #[arg(value_name = "MEAN", value_parser = utils::eval)]
         m: f64,
-        #[arg(value_name = "STD_DEV")]
+        #[arg(value_name = "STD_DEV", value_parser = utils::eval)]
         s: f64,
-        #[arg(value_name = "KEY_POINTS")]
+        #[arg(value_name = "KEY_POINTS", value_parser = utils::eval)]
         x: Vec<f64>,
     },
     #[command(about = about("X ~ χ²(n)", "Chi-squared distribution"))]
     Chisq {
         /// degrees of freedom
-        #[arg(value_name = "FREEDOM")]
+        #[arg(value_name = "FREEDOM", value_parser = utils::eval_u64)]
         n: u64,
-        #[arg(value_name = "KEY_POINTS")]
+        #[arg(value_name = "KEY_POINTS", value_parser = utils::eval)]
         x: Vec<f64>,
     },
     /// Reverse-engineer the Normal distribution
     Inorm {
-        #[arg(value_name = "MEAN")]
+        #[arg(value_name = "MEAN", value_parser = utils::eval)]
         m: f64,
-        #[arg(value_name = "STD_DEV")]
+        #[arg(value_name = "STD_DEV", value_parser = utils::eval)]
         s: f64,
         #[arg(value_name = "AREA", value_enum)]
         a: Area,
-        #[arg(value_name = "PROBABILITY", value_parser = utils::is_probability)]
+        #[arg(value_name = "PROBABILITY", value_parser = utils::eval_prob)]
         x: f64,
     },
     /// Reverse-engineer the Chi-squared distribution
     Ichisq {
         /// degrees of freedom
-        #[arg(value_name = "FREEDOM")]
+        #[arg(value_name = "FREEDOM", value_parser = utils::eval_u64)]
         n: u64,
-        #[arg(value_name = "PROBABILITY", value_parser = utils::is_probability)]
+        #[arg(value_name = "PROBABILITY", value_parser = utils::eval_prob)]
         x: f64,
+    },
+    #[command(about = "Evaluate an expression")]
+    Eval {
+        #[arg(value_name = "EXPR")]
+        expr: Vec<String>,
     },
     #[command(hide = true)]
     Secret,
@@ -192,6 +197,10 @@ fn run(cli: Cli) -> Result<()> {
                 }
             }
         }
+        Commands::Eval { expr } => match meval::eval_str(expr.join(" ")) {
+            Ok(v) => send(v),
+            Err(_) => send("Invalid expression."),
+        },
         _ => {
             println!("{}", secret::SECRET.trim());
         }

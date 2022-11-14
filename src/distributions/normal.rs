@@ -1,3 +1,4 @@
+use crate::distributions::INFO;
 use crate::types::{Analysis, Summary};
 use crate::utils::{cdf_intervals, pdf_points, Result, ResultOps};
 use statrs::distribution::{self as SR, Continuous, ContinuousCDF};
@@ -18,7 +19,7 @@ impl Summary<f64> for SR::Normal {
             expected: self.mean(),
             variance: self.variance(),
             header: self.header(),
-            pdf_eval: pdf_points(values, |v| self.pdf(v), true),
+            pdf_eval: pdf_points(values, |v| self.pdf(v), INFO.normal.discrete),
             cdf_eval: cdf_intervals(values, |v| self.cdf(v)),
         }
     }
