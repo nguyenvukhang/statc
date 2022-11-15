@@ -11,6 +11,7 @@ pub struct Info {
     pub normal: OneDist,
     pub poisson: OneDist,
     pub uniform: OneDist,
+    pub fisher_snedecor: OneDist,
 }
 
 pub const INFO: Info = Info {
@@ -24,4 +25,5 @@ pub const INFO: Info = Info {
     exponential: OneDist { discrete: false },
     normal: OneDist { discrete: false },
     uniform: OneDist { discrete: false },
+    fisher_snedecor: OneDist { discrete: false },
 };

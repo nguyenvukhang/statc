@@ -99,6 +99,15 @@ enum Commands {
         #[arg(value_name = "KEY_POINTS", value_parser = utils::eval)]
         x: Vec<f64>,
     },
+    #[command(about = about("X ~ F(m, n)", "Fisher-Snedecor distribution"))]
+    F {
+        #[arg(value_name = "FREEDOM_1", value_parser = utils::eval_u64)]
+        m: u64,
+        #[arg(value_name = "FREEDOM_2", value_parser = utils::eval_u64)]
+        n: u64,
+        #[arg(value_name = "KEY_POINTS", value_parser = utils::eval)]
+        x: Vec<f64>,
+    },
     /// Reverse-engineer the Normal distribution
     Inorm {
         #[arg(value_name = "MEAN", value_parser = utils::eval)]
@@ -169,6 +178,10 @@ fn run(cli: Cli) -> Result<()> {
         }
         Commands::Chisq { n, x } => {
             let dist = dist::ChiSquared::new(n)?;
+            send(dist.analyze(&x).round());
+        }
+        Commands::F { m, n, x } => {
+            let dist = dist::FisherSnedecor::new(m, n)?;
             send(dist.analyze(&x).round());
         }
         Commands::Ichisq { n, x } => {

@@ -1,6 +1,7 @@
 mod binomial;
 mod chi_squared;
 mod exponential;
+mod fisher_snedecor;
 mod geometric;
 mod info;
 mod negative_binomial;
@@ -11,6 +12,7 @@ mod uniform;
 pub use binomial::Binomial;
 pub use chi_squared::ChiSquared;
 pub use exponential::Exponential;
+pub use fisher_snedecor::FisherSnedecor;
 pub use geometric::Geometric;
 pub use info::INFO;
 pub use negative_binomial::NegativeBinomial;
