@@ -127,6 +127,16 @@ enum Commands {
         #[arg(value_name = "PROBABILITY", value_parser = utils::eval_prob)]
         x: f64,
     },
+    /// Reverse-engineer the Normal distribution
+    It {
+        /// degrees of freedom
+        #[arg(value_name = "FREEDOM", value_parser = utils::eval_u64)]
+        f: u64,
+        #[arg(value_name = "AREA", value_enum)]
+        a: Area,
+        #[arg(value_name = "PROBABILITY", value_parser = utils::eval_prob)]
+        x: f64,
+    },
     /// Reverse-engineer the Chi-squared distribution
     Ichisq {
         /// degrees of freedom
@@ -208,6 +218,31 @@ fn run(cli: Cli) -> Result<()> {
         }
         Commands::Inorm { m, s, x, a } => {
             let dist = dist::Normal::new(m, s)?;
+            use statrs::distribution::ContinuousCDF;
+            send(dist.header());
+            match a {
+                Area::Left => {
+                    let res = dist.inverse_cdf(x);
+                    send(format!("P(X < {res}) = {x}"));
+                }
+                Area::Right => {
+                    let res = -dist.inverse_cdf(x);
+                    send(format!("P(X > {res}) = {x}"));
+                }
+                Area::Mid => {
+                    let mut plist = PEvalList::new();
+                    let d = x / 2.0;
+                    let lo = dist.inverse_cdf(0.5 - d);
+                    let hi = dist.inverse_cdf(0.5 + d);
+                    plist.push(PEval::new("a: left bound", lo));
+                    plist.push(PEval::new("b: right bound", hi));
+                    plist.push(PEval::new(&format!("P(a < X <= b)"), x));
+                    send(plist);
+                }
+            }
+        }
+        Commands::It { f, a, x } => {
+            let dist = dist::StudentsT::new(f)?;
             use statrs::distribution::ContinuousCDF;
             send(dist.header());
             match a {
