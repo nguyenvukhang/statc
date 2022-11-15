@@ -1,3 +1,4 @@
+mod data_set;
 mod display;
 mod distributions;
 mod math;
@@ -122,6 +123,11 @@ enum Commands {
         #[arg(value_name = "EXPR")]
         expr: Vec<String>,
     },
+    #[command(about = "Summarize data from a file")]
+    Data {
+        #[arg(value_name = "FILE")]
+        file: String,
+    },
     #[command(hide = true)]
     Secret,
 }
@@ -171,6 +177,9 @@ fn run(cli: Cli) -> Result<()> {
             send(dist.header());
             let res = dist.inverse_cdf(1.0 - x);
             send(format!("P(X > {res}) = {x}"));
+        }
+        Commands::Data { file } => {
+            data_set::analyze(&file);
         }
         Commands::Inorm { m, s, x, a } => {
             let dist = dist::Normal::new(m, s)?;
