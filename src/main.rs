@@ -23,7 +23,7 @@ struct Cli {
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
 enum Area {
     Left,
-    Center,
+    Mid,
     Right,
 }
 
@@ -219,7 +219,7 @@ fn run(cli: Cli) -> Result<()> {
                     let res = -dist.inverse_cdf(x);
                     send(format!("P(X > {res}) = {x}"));
                 }
-                Area::Center => {
+                Area::Mid => {
                     let mut plist = PEvalList::new();
                     let d = x / 2.0;
                     let lo = dist.inverse_cdf(0.5 - d);
