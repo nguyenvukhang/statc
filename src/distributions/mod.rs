@@ -7,8 +7,10 @@ mod info;
 mod negative_binomial;
 mod normal;
 mod poisson;
+mod students_t;
 mod uniform;
 
+pub use students_t::StudentsT;
 pub use binomial::Binomial;
 pub use chi_squared::ChiSquared;
 pub use exponential::Exponential;

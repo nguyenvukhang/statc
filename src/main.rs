@@ -91,6 +91,14 @@ enum Commands {
         #[arg(value_name = "KEY_POINTS", value_parser = utils::eval)]
         x: Vec<f64>,
     },
+    #[command(about = about("X ~ t(n)", "Student's t-distribution"))]
+    T {
+        /// degrees of freedom
+        #[arg(value_name = "FREEDOM", value_parser = utils::eval_u64)]
+        f: u64,
+        #[arg(value_name = "KEY_POINTS", value_parser = utils::eval)]
+        x: Vec<f64>,
+    },
     #[command(about = about("X ~ χ²(n)", "Chi-squared distribution"))]
     Chisq {
         /// degrees of freedom
@@ -174,6 +182,10 @@ fn run(cli: Cli) -> Result<()> {
         }
         Commands::Norm { m, s, x } => {
             let dist = dist::Normal::new(m, s)?;
+            send(dist.analyze(&x).round());
+        }
+        Commands::T { f, x } => {
+            let dist = dist::StudentsT::new(f)?;
             send(dist.analyze(&x).round());
         }
         Commands::Chisq { n, x } => {
