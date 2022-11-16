@@ -3,7 +3,7 @@ use crate::utils::{err, Result, ResultOps};
 use std::env;
 use std::fmt;
 use std::fs::File;
-use std::io::{BufRead, BufReader};
+use std::io::{BufRead, BufReader, Read};
 
 struct DataPoint {
     val: f64,
@@ -49,12 +49,13 @@ fn variance(data: &Vec<DataPoint>) -> Result<f64> {
     Ok(res.roundn(10))
 }
 
-fn inner(file: &str) -> Result<()> {
-    let cwd = env::current_dir().serr("Unable to get current dir.")?;
-    let file = File::open(cwd.join(file)).serr("Unable to get file")?;
+fn parse(s: &str) -> Result<f64> {
+    s.parse().serr("Unable to parse f64 from string.")
+}
+
+fn pairs(lines: &Vec<String>) -> Result<Vec<DataPoint>> {
     let mut data: Vec<DataPoint> = Vec::new();
-    let parse = |v: &str| v.parse::<f64>().serr("Invalid val.");
-    BufReader::new(file).lines().filter_map(|v| v.ok()).for_each(|line| {
+    lines.iter().for_each(|line| {
         let s = match line.split_once(' ') {
             Some(v) => (parse(v.0), parse(v.1)),
             None => return,
@@ -64,6 +65,20 @@ fn inner(file: &str) -> Result<()> {
             _ => return,
         }
     });
+    Ok(data)
+}
+
+fn points(lines: &Vec<String>) -> Result<Vec<DataPoint>> {
+    let mut data: Vec<DataPoint> = Vec::new();
+    lines.iter().for_each(|line| match parse(&line) {
+        Ok(v) => data.push(DataPoint { val: v, prob: 0.0 }),
+        _ => return,
+    });
+    let prob = 1.0 / data.len() as f64;
+    Ok(data.iter().map(|p| DataPoint { val: p.val, prob }).collect())
+}
+
+fn print(data: &Vec<DataPoint>) {
     println!("{}", pretty_display(&data));
     match mean(&data) {
         Ok(v) => println!("mean:     {}", v),
@@ -73,9 +88,27 @@ fn inner(file: &str) -> Result<()> {
         Ok(v) => println!("variance: {}", v),
         Err(e) => println!("Error: {}", e),
     }
-    Ok(())
+}
+
+fn open_file(file: &str) -> Result<File> {
+    let cwd = env::current_dir().serr("Unable to get current dir.")?;
+    File::open(cwd.join(file)).serr("Unable to get file")
+}
+
+/// Conveniently converts either a `File` or `Output` into an iterator of
+/// `String`s, dropping the invalid ones.
+fn lines<R: Read>(src: R) -> impl Iterator<Item = String> {
+    BufReader::new(src).lines().filter_map(|v| v.ok())
 }
 
 pub fn analyze(file: &str) {
-    inner(file).unwrap();
+    let v: Vec<String> = match open_file(file) {
+        Err(_) => return,
+        Ok(v) => lines(v).collect(),
+    };
+    let mut data = pairs(&v).unwrap_or_default();
+    if data.is_empty() {
+        data = points(&v).unwrap_or_default();
+    }
+    print(&data);
 }
