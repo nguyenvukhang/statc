@@ -33,3 +33,13 @@ impl Summary<u64> for SR::Binomial {
         format!("X ~ B({n}, {p})")
     }
 }
+
+#[test]
+fn binomial_test() -> Result<()> {
+    use crate::math::Round;
+    let dist = Binomial::new(5, 0.2)?;
+    assert_eq!(dist.pmf(1).roundn(10), 0.4096);
+    let dist = Binomial::new(6, 2.0 / 3.0)?;
+    assert_eq!(dist.pmf(0).roundn(10), 0.0013717421);
+    Ok(())
+}

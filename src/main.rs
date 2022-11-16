@@ -163,15 +163,20 @@ enum Commands {
         #[arg(value_name = "FILE_2")]
         f2: String,
     },
-    #[command(about = "Evaluate an expression")]
-    Eval {
-        #[arg(value_name = "EXPR")]
-        expr: Vec<String>,
+    #[command(about = "Compare difference of two samples")]
+    Diff {
+        #[arg(value_name = "FILE")]
+        file: String,
     },
     #[command(about = "Summarize data from a file")]
     Data {
         #[arg(value_name = "FILE")]
         file: String,
+    },
+    #[command(about = "Evaluate an expression")]
+    Eval {
+        #[arg(value_name = "EXPR")]
+        expr: Vec<String>,
     },
     #[command(hide = true)]
     Secret,
@@ -285,12 +290,12 @@ fn run(cli: Cli) -> Result<()> {
             send(math::pooled_variance(n1 as f64, v1, n2 as f64, v2))
         }
         Commands::Data { file } => {
-            let data = data_set::analyze(&file)?;
+            let data = data_set::analyze(&file, data_set::Parser::Single)?;
             send(data.export())
         }
         Commands::Comp { f1, f2 } => {
-            let mut d1 = data_set::analyze(&f1)?;
-            let mut d2 = data_set::analyze(&f2)?;
+            let mut d1 = data_set::analyze(&f1, data_set::Parser::Single)?;
+            let mut d2 = data_set::analyze(&f2, data_set::Parser::Single)?;
             let mut list = PEvalList::new();
             list.header(&f1);
             list.append(&d1.export());
@@ -304,6 +309,10 @@ fn run(cli: Cli) -> Result<()> {
                 d2.var_s().unwrap(),
             ));
             send(list);
+        }
+        Commands::Diff { file } => {
+            let data = data_set::analyze(&file, data_set::Parser::PairDiff)?;
+            send(data.export())
         }
         Commands::Eval { expr } => match meval::eval_str(expr.join(" ")) {
             Ok(v) => send(v),

@@ -1,7 +1,6 @@
-use crate::data_set::point::DataPoint;
+use crate::data_set::point::{DataPoint, ParseData};
 use crate::types::PEvalList;
 use crate::utils::{err, Result};
-use std::str::FromStr;
 
 #[derive(Debug)]
 pub struct Data {
@@ -11,18 +10,34 @@ pub struct Data {
     var_s: Option<f64>,
 }
 
+pub enum Parser {
+    Single,
+    PairDiff,
+}
+
 impl Data {
-    pub fn new(raw: &Vec<String>) -> Result<Self> {
-        let mut data = Data {
-            mean: None,
-            var_p: None,
-            var_s: None,
-            data: raw
-                .iter()
-                .map(|v| DataPoint::from_str(v))
-                .filter_map(|v| v.ok())
-                .collect(),
+    pub fn new(raw: &Vec<String>, parser: Parser) -> Result<Self> {
+        let data: Vec<DataPoint> = match parser {
+            Parser::Single => {
+                let b: Vec<DataPoint> = raw
+                    .iter()
+                    .map(|v| v.val_prob())
+                    .filter_map(|v| v.ok())
+                    .collect();
+                match b.is_empty() {
+                    true => raw
+                        .iter()
+                        .map(|v| v.point())
+                        .filter_map(|v| v.ok())
+                        .collect(),
+                    false => b,
+                }
+            }
+            Parser::PairDiff => {
+                raw.iter().map(|v| v.diff()).filter_map(|v| v.ok()).collect()
+            }
         };
+        let mut data = Data { mean: None, var_p: None, var_s: None, data };
         data.balance();
         data.mean().ok();
         data.var_p().ok();
