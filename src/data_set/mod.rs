@@ -1,23 +1,21 @@
 mod data;
 mod point;
-use crate::utils::{Result, ResultOps};
+use crate::utils::{err, Result, ResultOps};
 use std::env;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
+
+pub use data::Data;
 
 fn open_file(file: &str) -> Result<File> {
     let cwd = env::current_dir().serr("Unable to get current dir.")?;
     File::open(cwd.join(file)).serr("Unable to get file")
 }
 
-pub fn analyze(file: &str) {
+pub fn analyze(file: &str) -> Result<Data> {
     let lines: Vec<String> = match open_file(file) {
-        Err(_) => return,
+        Err(_) => return err(&format!("Unable to open file {}", file)),
         Ok(v) => BufReader::new(v).lines().filter_map(|v| v.ok()).collect(),
     };
-    let data = data::Data::new(&lines);
-    match data.is_valid() {
-        Ok(_) => println!("{}", data.export()),
-        Err(msg) => println!("Error: {}", msg),
-    }
+    Data::new(&lines)
 }

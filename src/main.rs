@@ -156,6 +156,13 @@ enum Commands {
         #[arg(value_name = "VARIANCE_2", value_parser = utils::eval)]
         v2: f64,
     },
+    #[command(about = "Compare two samples")]
+    Comp {
+        #[arg(value_name = "FILE_1")]
+        f1: String,
+        #[arg(value_name = "FILE_2")]
+        f2: String,
+    },
     #[command(about = "Evaluate an expression")]
     Eval {
         #[arg(value_name = "EXPR")]
@@ -224,9 +231,6 @@ fn run(cli: Cli) -> Result<()> {
             let res = dist.inverse_cdf(1.0 - x);
             send(format!("P(X > {res}) = {x}"));
         }
-        Commands::Data { file } => {
-            data_set::analyze(&file);
-        }
         Commands::Inorm { m, s, x, a } => {
             let dist = dist::Normal::new(m, s)?;
             use statrs::distribution::ContinuousCDF;
@@ -278,16 +282,28 @@ fn run(cli: Cli) -> Result<()> {
             }
         }
         Commands::Vpool { v1, v2, n1, n2 } => {
-            let (n1, n2) = (n1 as f64, n2 as f64);
-            let mut plist = PEvalList::new();
-            let p = ((n1 - 1.0) * v1 + (n2 - 1.0) * v2) / (n1 + n2 - 2.0);
-            plist.push("[1] sample size", n1);
-            plist.push("[1] sample variance", v1);
-            plist.push("[2] sample size", n2);
-            plist.push("[2] sample variance", v2);
-            plist.push("pooled sample variance", p);
-            plist.push("pooled sample std.dev", p.sqrt());
-            send(plist)
+            send(math::pooled_variance(n1 as f64, v1, n2 as f64, v2))
+        }
+        Commands::Data { file } => {
+            let data = data_set::analyze(&file)?;
+            send(data.export())
+        }
+        Commands::Comp { f1, f2 } => {
+            let mut d1 = data_set::analyze(&f1)?;
+            let mut d2 = data_set::analyze(&f2)?;
+            let mut list = PEvalList::new();
+            list.header(&f1);
+            list.append(&d1.export());
+            list.header(&f2);
+            list.append(&d2.export());
+            list.header("pooled sample");
+            list.append(&math::pooled_variance(
+                d1.n(),
+                d1.var_s().unwrap(),
+                d2.n(),
+                d2.var_s().unwrap(),
+            ));
+            send(list);
         }
         Commands::Eval { expr } => match meval::eval_str(expr.join(" ")) {
             Ok(v) => send(v),

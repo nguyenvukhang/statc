@@ -12,7 +12,7 @@ pub struct Data {
 }
 
 impl Data {
-    pub fn new(raw: &Vec<String>) -> Self {
+    pub fn new(raw: &Vec<String>) -> Result<Self> {
         let mut data = Data {
             mean: None,
             var_p: None,
@@ -27,7 +27,7 @@ impl Data {
         data.mean().ok();
         data.var_p().ok();
         data.var_s().ok();
-        data
+        data.check()
     }
 
     /// evenly distributes probability such that sum is 1
@@ -42,12 +42,12 @@ impl Data {
             self.data.iter().map(|v| DataPoint { val: v.val, prob }).collect();
     }
 
-    fn n(&self) -> f64 {
+    pub fn n(&self) -> f64 {
         self.data.len() as f64
     }
 
     /// Calculate mean and update self.
-    fn mean(&mut self) -> Result<f64> {
+    pub fn mean(&mut self) -> Result<f64> {
         if let Some(v) = self.mean {
             return Ok(v);
         }
@@ -58,7 +58,7 @@ impl Data {
 
     /// Assumes self.data contains entire population
     /// and calculates population variance.
-    fn var_p(&mut self) -> Result<f64> {
+    pub fn var_p(&mut self) -> Result<f64> {
         if let Some(v) = self.var_p {
             return Ok(v);
         }
@@ -69,7 +69,7 @@ impl Data {
         Ok(var_p)
     }
 
-    fn var_s(&mut self) -> Result<f64> {
+    pub fn var_s(&mut self) -> Result<f64> {
         if let Some(v) = self.var_s {
             return Ok(v);
         }
@@ -79,7 +79,7 @@ impl Data {
     }
 
     /// true if and only if dataset is non-empty and total probability adds up to 1
-    pub fn is_valid(&self) -> Result<()> {
+    pub fn check(self) -> Result<Self> {
         if self.data.is_empty() {
             return err("empty dataset.");
         }
@@ -87,7 +87,7 @@ impl Data {
         if (total_prob.unwrap_or(0.0) - 1.0).abs() > 1e-10 {
             return err("total probability is not 1.");
         }
-        Ok(())
+        Ok(self)
     }
 
     pub fn export(&self) -> PEvalList {

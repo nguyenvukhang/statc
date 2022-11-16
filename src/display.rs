@@ -4,7 +4,11 @@ use std::fmt::{self, Display, Formatter};
 fn margin(left: impl Display, right: impl Display, margin: usize) -> String {
     let (m, l) = (margin, format!("{}", left));
     let l = (0..m.checked_sub(l.len()).unwrap_or(1)).fold(l, |a, _| a + " ");
-    format!("{} | {}", l, right)
+    let r = format!("{}", right);
+    match r.is_empty() {
+        true => format!("{}", l),
+        false => format!("{} | {}", l, r),
+    }
 }
 
 struct Printer {
@@ -32,7 +36,8 @@ impl Printer {
     fn line_eval(&mut self, p_eval: &PEval) {
         let left = p_eval.desc.to_string();
         self.word(&left);
-        self.lines.push([left, p_eval.val.to_string()]);
+        let right = p_eval.val.map(|v| v.to_string()).unwrap_or_default();
+        self.lines.push([left, right]);
     }
 
     fn build(&self) -> String {

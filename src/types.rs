@@ -1,16 +1,19 @@
 use crate::math::Round;
 
 pub struct PEval {
-    pub val: f64,
+    pub val: Option<f64>,
     pub desc: String,
 }
 
 impl PEval {
     fn round(&self) -> Self {
-        Self { val: self.val.roundn(10), desc: self.desc.to_string() }
+        Self {
+            val: self.val.map(|v| v.roundn(10)),
+            desc: self.desc.to_string(),
+        }
     }
-    pub fn new(desc: &str, val: f64) -> Self {
-        Self { desc: desc.to_string(), val: val.roundn(10) }
+    pub fn new(desc: &str, val: Option<f64>) -> Self {
+        Self { desc: desc.to_string(), val: val.map(|v| v.roundn(10)) }
     }
 }
 
@@ -28,10 +31,19 @@ pub struct PEvalList {
 
 impl PEvalList {
     pub fn push(&mut self, desc: &str, val: f64) {
-        self.list.push(PEval::new(desc, val));
+        self.list.push(PEval::new(desc, Some(val)));
+    }
+    pub fn header(&mut self, header: &str) {
+        self.list.push(PEval::new(&format!("[{}]", header), None));
     }
     pub fn new() -> Self {
         Self { list: Vec::new() }
+    }
+    pub fn append(&mut self, other: &PEvalList) {
+        other
+            .list
+            .iter()
+            .for_each(|v| self.list.push(PEval::new(&v.desc, v.val)));
     }
 }
 

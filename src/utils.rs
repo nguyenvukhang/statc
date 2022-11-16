@@ -33,7 +33,7 @@ pub fn pdf_points<T: Display + Copy, F: Fn(T) -> f64>(
         true => format!("P(X = {})", v),
         false => format!("pdf @ {}", v),
     };
-    list.iter().map(|v| PEval::new(&msg(v), pdf(*v))).collect()
+    list.iter().map(|v| PEval::new(&msg(v), Some(pdf(*v)))).collect()
 }
 
 /// Takes a list of n points supplied by the user
@@ -47,10 +47,10 @@ pub fn cdf_intervals<T: Display + Copy, F: Fn(T) -> f64>(
     // first element: calculate P(X <= x)
     let mut result = match list.first() {
         None => return vec![],
-        Some(hi) => vec![PEval::new(&format!("P(X <= {hi})"), cdf(*hi))],
+        Some(hi) => vec![PEval::new(&format!("P(X <= {hi})"), Some(cdf(*hi)))],
     };
     let mut iter = list.iter().peekable();
-    let mut send = |d: &str, v: f64| result.push(PEval::new(&d, v));
+    let mut send = |d: &str, v: f64| result.push(PEval::new(&d, Some(v)));
     while let Some(lo) = iter.next() {
         if let Some(hi) = iter.peek() {
             send(&format!("P({lo} < X <= {hi})"), cdf(**hi) - cdf(*lo));

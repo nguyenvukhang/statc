@@ -1,3 +1,5 @@
+use crate::types::PEvalList;
+
 pub trait MathOps {
     fn pow(self, exponent: u64) -> Self;
 }
@@ -24,4 +26,16 @@ impl Round for f64 {
         let res = res / shift;
         res
     }
+}
+
+pub fn pooled_variance(n1: f64, v1: f64, n2: f64, v2: f64) -> PEvalList {
+    let mut plist = PEvalList::new();
+    let p = ((n1 - 1.0) * v1 + (n2 - 1.0) * v2) / (n1 + n2 - 2.0);
+    plist.push("[1] sample size", n1);
+    plist.push("[1] sample variance", v1);
+    plist.push("[2] sample size", n2);
+    plist.push("[2] sample variance", v2);
+    plist.push("pooled sample variance", p);
+    plist.push("pooled sample std.dev", p.sqrt());
+    plist
 }
