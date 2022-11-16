@@ -10,7 +10,7 @@ impl PEval {
         Self { val: self.val.roundn(10), desc: self.desc.to_string() }
     }
     pub fn new(desc: &str, val: f64) -> Self {
-        Self { desc: desc.to_string(), val }
+        Self { desc: desc.to_string(), val: val.roundn(10) }
     }
 }
 
@@ -27,8 +27,8 @@ pub struct PEvalList {
 }
 
 impl PEvalList {
-    pub fn push(&mut self, p: PEval) {
-        self.list.push(p);
+    pub fn push(&mut self, desc: &str, val: f64) {
+        self.list.push(PEval::new(desc, val));
     }
     pub fn new() -> Self {
         Self { list: Vec::new() }

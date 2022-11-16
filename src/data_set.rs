@@ -1,5 +1,6 @@
 use crate::math::Round;
 use crate::utils::{err, Result, ResultOps};
+use crate::PEvalList;
 use std::env;
 use std::fmt;
 use std::fs::File;
@@ -14,13 +15,6 @@ impl fmt::Display for DataPoint {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "P(X = {}) = {}", self.val, self.prob)
     }
-}
-
-fn pretty_display(data: &Vec<DataPoint>) -> String {
-    let mut res =
-        data.iter().fold(String::new(), |s, v| s + &format!("{}\n", v));
-    res.pop();
-    res
 }
 
 fn valid_total_prob(data: &Vec<DataPoint>) -> bool {
@@ -79,15 +73,21 @@ fn points(lines: &Vec<String>) -> Result<Vec<DataPoint>> {
 }
 
 fn print(data: &Vec<DataPoint>) {
-    println!("{}", pretty_display(&data));
-    match mean(&data) {
-        Ok(v) => println!("mean:     {}", v),
-        Err(e) => println!("Error: {}", e),
-    }
-    match variance(&data) {
-        Ok(v) => println!("variance: {}", v),
-        Err(e) => println!("Error: {}", e),
-    }
+    let mut plist = PEvalList::new();
+    let n = data.len() as f64;
+    let mean = mean(&data);
+    let variance = variance(&data);
+    let s_variance = (variance.to_owned()).map(|v| v * n / (n - 1.0));
+    let mut push = |d: &str, v: &Result<f64>| match v {
+        Ok(v) => plist.push(d, *v),
+        Err(_) => (),
+    };
+    push("mean", &mean);
+    push("population variance", &variance);
+    push("population std.dev", &variance.map(|v| v.sqrt()));
+    push("sample variance", &s_variance);
+    push("sample std.err", &s_variance.map(|v| v.sqrt()));
+    println!("{}", plist);
 }
 
 fn open_file(file: &str) -> Result<File> {

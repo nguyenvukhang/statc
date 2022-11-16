@@ -8,7 +8,7 @@ mod types;
 mod utils;
 
 use clap::{Parser, Subcommand, ValueEnum};
-use types::{PEval, PEvalList, Summary};
+use types::{PEvalList, Summary};
 use utils::Result;
 
 #[derive(Parser)]
@@ -234,9 +234,9 @@ fn run(cli: Cli) -> Result<()> {
                     let d = x / 2.0;
                     let lo = dist.inverse_cdf(0.5 - d);
                     let hi = dist.inverse_cdf(0.5 + d);
-                    plist.push(PEval::new("a: left bound", lo));
-                    plist.push(PEval::new("b: right bound", hi));
-                    plist.push(PEval::new(&format!("P(a < X <= b)"), x));
+                    plist.push("a: left bound", lo);
+                    plist.push("b: right bound", hi);
+                    plist.push(&format!("P(a < X <= b)"), x);
                     send(plist);
                 }
             }
@@ -259,9 +259,9 @@ fn run(cli: Cli) -> Result<()> {
                     let d = x / 2.0;
                     let lo = dist.inverse_cdf(0.5 - d);
                     let hi = dist.inverse_cdf(0.5 + d);
-                    plist.push(PEval::new("a: left bound", lo));
-                    plist.push(PEval::new("b: right bound", hi));
-                    plist.push(PEval::new(&format!("P(a < X <= b)"), x));
+                    plist.push("a: left bound", lo);
+                    plist.push("b: right bound", hi);
+                    plist.push(&format!("P(a < X <= b)"), x);
                     send(plist);
                 }
             }
