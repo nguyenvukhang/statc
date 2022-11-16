@@ -145,6 +145,17 @@ enum Commands {
         #[arg(value_name = "PROBABILITY", value_parser = utils::eval_prob)]
         x: f64,
     },
+    #[command(about = "Pooled sample variance")]
+    Vpool {
+        #[arg(value_name = "SIZE_1", value_parser = utils::eval_u64)]
+        n1: u64,
+        #[arg(value_name = "VARIANCE_1", value_parser = utils::eval)]
+        v1: f64,
+        #[arg(value_name = "SIZE_2", value_parser = utils::eval_u64)]
+        n2: u64,
+        #[arg(value_name = "VARIANCE_2", value_parser = utils::eval)]
+        v2: f64,
+    },
     #[command(about = "Evaluate an expression")]
     Eval {
         #[arg(value_name = "EXPR")]
@@ -262,9 +273,21 @@ fn run(cli: Cli) -> Result<()> {
                     plist.push("a: left bound", lo);
                     plist.push("b: right bound", hi);
                     plist.push(&format!("P(a < X <= b)"), x);
-                    send(plist);
+                    send(plist)
                 }
             }
+        }
+        Commands::Vpool { v1, v2, n1, n2 } => {
+            let (n1, n2) = (n1 as f64, n2 as f64);
+            let mut plist = PEvalList::new();
+            let p = ((n1 - 1.0) * v1 + (n2 - 1.0) * v2) / (n1 + n2 - 2.0);
+            plist.push("[1] sample size", n1);
+            plist.push("[1] sample variance", v1);
+            plist.push("[2] sample size", n2);
+            plist.push("[2] sample variance", v2);
+            plist.push("pooled sample variance", p);
+            plist.push("pooled sample std.dev", p.sqrt());
+            send(plist)
         }
         Commands::Eval { expr } => match meval::eval_str(expr.join(" ")) {
             Ok(v) => send(v),

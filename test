@@ -4,9 +4,10 @@ PASS='\033[30m\033[1;42m PASS \033[0m'
 FAIL='\033[30m\033[1;41m FAIL \033[0m'
 
 cargo test || exit 1
-cargo build
-STATS=$PWD/target/debug/stats
-TMP_DIR=/tmp/stats_rs
+cargo build --quiet
+STATC=$PWD/target/debug/statc
+TMP_DIR=/tmp/statc_rs
+HERE=$PWD
 
 cleanup() {
   rm -rf $TMP_DIR
@@ -14,8 +15,8 @@ cleanup() {
 trap cleanup EXIT
 rm -rf $TMP_DIR && mkdir -p $TMP_DIR && cd $TMP_DIR
 
-stats() { # runs the test and creates a `received.txt`
-  echo "" >receieved.txt && eval $STATS $@ >>receieved.txt
+statc() { # runs the test and creates a `received.txt`
+  echo "" >receieved.txt && eval $STATC $@ >>receieved.txt
   TITLE="\033[0;37m$@\033[1;0m"
 }
 
@@ -24,10 +25,19 @@ assert() { # checks `received.txt` against $EXPECT
   diff -y -W 70 receieved.txt expected.txt >/dev/null
   local RC=$? # diff's return code. 0 means ok
   [[ $RC == 0 ]] && echo "$PASS $TITLE" || echo "$FAIL $TITLE"
-  [[ $RC -ne 0 ]] && cat receieved.txt && exit 1
+  if [[ $RC -ne 0 ]]; then
+    echo '~~~~~~~~~~~~~~~~~~~~~~~~~~'
+    echo 'expected:'
+    cat expected.txt
+    echo '~~~~~~~~~~~~~~~~~~~~~~~~~~'
+    echo 'received:'
+    cat receieved.txt
+    echo '~~~~~~~~~~~~~~~~~~~~~~~~~~'
+    exit 1
+  fi
 }
 
-stats binom 10 0.2 4
+statc binom 10 0.2 4
 EXPECT="
 X ~ B(10, 0.2)
 expected  | 2
@@ -37,17 +47,17 @@ P(X <= 4) | 0.9672065024
 P(X > 4)  | 0.0327934976"
 assert
 
-stats nbinom 2 0.2 4
+statc nbinom 2 0.2 4
 EXPECT="
 X ~ NB(2, 0.2)
-expected  | 8
+expected  | 10
 variance  | 40
-P(X = 4)  | 0.08192
-P(X <= 4) | 0.34464
-P(X > 4)  | 0.65536"
+P(X = 4)  | 0.0768
+P(X <= 4) | 0.1808
+P(X > 4)  | 0.8192"
 assert
 
-stats geom 0.2 4
+statc geom 0.2 4
 EXPECT="
 X ~ G(0.2)
 expected  | 5
@@ -57,7 +67,7 @@ P(X <= 4) | 0.5904
 P(X > 4)  | 0.4096"
 assert
 
-stats pois 4.2 4
+statc pois 4.2 4
 EXPECT="
 X ~ Poisson(4.2)
 expected  | 4.2
@@ -67,7 +77,7 @@ P(X <= 4) | 0.5898270213
 P(X > 4)  | 0.4101729787"
 assert
 
-stats unif 1.9 4.2 4
+statc unif 1.9 4.2 4
 EXPECT="
 X ~ U(1.9, 4.2)
 expected  | 3.05
@@ -77,7 +87,7 @@ P(X <= 4) | 0.9130434783
 P(X > 4)  | 0.0869565217"
 assert
 
-stats unif 1.9 4.2 4 4.1
+statc unif 1.9 4.2 4 4.1
 EXPECT="
 X ~ U(1.9, 4.2)
 expected        | 3.05
@@ -89,44 +99,44 @@ P(4 < X <= 4.1) | 0.0434782609
 P(X > 4.1)      | 0.0434782609"
 assert
 
-stats exp 1.9 2.5 2.6
+statc exp 1.9 2.5 2.6
 EXPECT="
 X ~ Exp(1.9)
 expected          | 0.5263157895
 variance          | 0.2770083102
-P(X = 2.5)        | 0.0164382209
-P(X = 2.6)        | 0.0135937369
+pdf @ 2.5         | 0.0164382209
+pdf @ 2.6         | 0.0135937369
 P(X <= 2.5)       | 0.9913483048
 P(2.5 < X <= 2.6) | 0.0014970968
 P(X > 2.6)        | 0.0071545984"
 assert
 
-stats exp 1.9 2.5
+statc exp 1.9 2.5
 EXPECT="
 X ~ Exp(1.9)
 expected    | 0.5263157895
 variance    | 0.2770083102
-P(X = 2.5)  | 0.0164382209
+pdf @ 2.5   | 0.0164382209
 P(X <= 2.5) | 0.9913483048
 P(X > 2.5)  | 0.0086516952"
 assert
 
-stats exp 1.9
+statc exp 1.9
 EXPECT="
 X ~ Exp(1.9)
 expected | 0.5263157895
 variance | 0.2770083102"
 assert
 
-stats exp 1.9 1 3 4 5
+statc exp 1.9 1 3 4 5
 EXPECT="
 X ~ Exp(1.9)
 expected      | 0.5263157895
 variance      | 0.2770083102
-P(X = 1)      | 0.2841803765
-P(X = 3)      | 0.0063573344
-P(X = 4)      | 0.0009508577
-P(X = 5)      | 0.0001422185
+pdf @ 1       | 0.2841803765
+pdf @ 3       | 0.0063573344
+pdf @ 4       | 0.0009508577
+pdf @ 5       | 0.0001422185
 P(X <= 1)     | 0.8504313808
 P(1 < X <= 3) | 0.1462226538
 P(3 < X <= 4) | 0.002845514
@@ -134,27 +144,27 @@ P(4 < X <= 5) | 0.0004255996
 P(X > 5)      | 0.0000748518"
 assert
 
-stats norm 1.9 1 3
+statc norm 1.9 1 3
 EXPECT="
 X ~ N(1.9, 1²)
 expected  | 1.9
 variance  | 1
-P(X = 3)  | 0.217852177
+pdf @ 3   | 0.217852177
 P(X <= 3) | 0.864333939
 P(X > 3)  | 0.135666061"
 assert
 
-stats inorm 1.9 1 left 0.3
+statc inorm 1.9 1 left 0.3
 EXPECT="
 X ~ N(1.9, 1²)
 P(X < 1.375599487291959) = 0.3"
 assert
 
-stats inorm 1.9 1 center 0.1
+statc inorm 1.9 1 mid 0.1
 EXPECT="
 X ~ N(1.9, 1²)
-a: left bound  | 1.774338653144926
-b: right bound | 2.025661346855074
+a: left bound  | 1.7743386531
+b: right bound | 2.0256613469
 P(a < X <= b)  | 0.1"
 assert
 
