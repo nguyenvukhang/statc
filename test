@@ -4,7 +4,7 @@ PASS='\033[30m\033[1;42m PASS \033[0m'
 FAIL='\033[30m\033[1;41m FAIL \033[0m'
 
 cargo test || exit 1
-cargo build --quiet
+cargo build --quiet &>/dev/null
 STATC=$PWD/target/debug/statc
 TMP_DIR=/tmp/statc_rs
 HERE=$PWD
@@ -36,6 +36,14 @@ assert() { # checks `received.txt` against $EXPECT
     exit 1
   fi
 }
+
+statc inorm 1.9 1 mid 0.1
+EXPECT="
+X ~ N(1.9, 1²)
+a: left bound  | 1.7743386531
+b: right bound | 2.0256613469
+P(a < X <= b)  | 0.1"
+assert
 
 statc binom 10 0.2 4
 EXPECT="
@@ -158,14 +166,6 @@ statc inorm 1.9 1 left 0.3
 EXPECT="
 X ~ N(1.9, 1²)
 P(X < 1.375599487291959) = 0.3"
-assert
-
-statc inorm 1.9 1 mid 0.1
-EXPECT="
-X ~ N(1.9, 1²)
-a: left bound  | 1.7743386531
-b: right bound | 2.0256613469
-P(a < X <= b)  | 0.1"
 assert
 
 exit 0

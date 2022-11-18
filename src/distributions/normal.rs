@@ -18,13 +18,13 @@ impl Summary<f64> for SR::Normal {
         Analysis {
             expected: self.mean(),
             variance: self.variance(),
-            header: self.header(),
+            title: self.title(),
             pdf_eval: pdf_points(values, |v| self.pdf(v), INFO.normal.discrete),
             cdf_eval: cdf_intervals(values, |v| self.cdf(v)),
         }
     }
 
-    fn header(&self) -> String {
+    fn title(&self) -> String {
         let u = |v: Option<f64>| v.map(|x| x.to_string()).unwrap_or("_".into());
         let (m, s) = (u(self.mean()), u(self.std_dev()));
         format!("X ~ N({m}, {s}²)")

@@ -1,77 +1,88 @@
 use crate::math::Round;
+use crate::printer::Printer;
+use std::fmt::{self, Display, Formatter};
 
-pub struct PEval {
-    pub val: Option<f64>,
+#[derive(Debug)]
+pub struct Line {
     pub desc: String,
+    pub val: Option<f64>,
 }
 
-impl PEval {
-    fn round(&self) -> Self {
-        Self {
-            val: self.val.map(|v| v.roundn(10)),
-            desc: self.desc.to_string(),
-        }
+impl Line {
+    fn round(&mut self) {
+        self.val = self.val.map(|v| v.roundn(10));
     }
     pub fn new(desc: &str, val: Option<f64>) -> Self {
         Self { desc: desc.to_string(), val: val.map(|v| v.roundn(10)) }
     }
 }
 
+#[derive(Debug, Default)]
 pub struct Analysis {
-    pub header: String,
+    pub title: String,
     pub expected: Option<f64>,
     pub variance: Option<f64>,
-    pub pdf_eval: Vec<PEval>,
-    pub cdf_eval: Vec<PEval>,
+    pub pdf_eval: Vec<Line>,
+    pub cdf_eval: Vec<Line>,
 }
 
-pub struct PEvalList {
-    pub list: Vec<PEval>,
+pub struct LineList {
+    pub title: String,
+    pub list: Vec<Line>,
 }
 
-impl PEvalList {
+impl LineList {
     pub fn push(&mut self, desc: &str, val: f64) {
-        self.list.push(PEval::new(desc, Some(val)));
+        self.list.push(Line::new(desc, Some(val)));
     }
     pub fn header(&mut self, header: &str) {
-        self.list.push(PEval::new(&format!("[{}]", header), None));
+        self.list.push(Line::new(&format!("[{}]", header), None));
     }
     pub fn new() -> Self {
-        Self { list: Vec::new() }
+        Self { list: Vec::new(), title: String::new() }
     }
-    pub fn append(&mut self, other: &PEvalList) {
+    pub fn set_title(&mut self, t: &str) {
+        self.title = t.to_string();
+    }
+    pub fn append(&mut self, other: &LineList) {
         other
             .list
             .iter()
-            .for_each(|v| self.list.push(PEval::new(&v.desc, v.val)));
-    }
-}
-
-impl Default for Analysis {
-    fn default() -> Analysis {
-        Analysis {
-            header: "null analysis".to_string(),
-            expected: None,
-            variance: None,
-            pdf_eval: Vec::new(),
-            cdf_eval: Vec::new(),
-        }
+            .for_each(|v| self.list.push(Line::new(&v.desc, v.val)));
     }
 }
 
 impl Analysis {
-    pub fn round(&self) -> Self {
-        Self {
-            header: self.header.to_string(),
-            expected: self.expected.map(|x| x.roundn(10)),
-            variance: self.variance.map(|x| x.roundn(10)),
-            pdf_eval: self.pdf_eval.iter().map(|x| x.round()).collect(),
-            cdf_eval: self.cdf_eval.iter().map(|x| x.round()).collect(),
-        }
+    pub fn round(&mut self) {
+        self.expected = self.expected.map(|v| v.roundn(10));
+        self.variance = self.variance.map(|v| v.roundn(10));
+        self.pdf_eval.iter_mut().for_each(|v| v.round());
+        self.cdf_eval.iter_mut().for_each(|v| v.round());
     }
 }
 
 pub trait Summary<T> {
     fn analyze(&self, values: &Vec<T>) -> Analysis;
-    fn header(&self) -> String;
+    fn title(&self) -> String;
+}
+
+impl Display for Analysis {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        let mut printer = Printer::new();
+        printer.raw_line("expected", self.expected);
+        printer.raw_line("variance", self.variance);
+        self.pdf_eval.iter().for_each(|v| printer.push_line(&v));
+        self.cdf_eval.iter().for_each(|v| printer.push_line(&v));
+        printer.set_title(&self.title);
+        printer.flush(f)
+    }
+}
+
+impl Display for LineList {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        let mut printer = Printer::new();
+        printer.set_title(&self.title);
+        self.list.iter().for_each(|v| printer.push_line(v));
+        printer.flush(f)
+    }
 }

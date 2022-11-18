@@ -18,7 +18,7 @@ impl Summary<f64> for SR::FisherSnedecor {
         Analysis {
             expected: self.mean(),
             variance: self.variance(),
-            header: self.header(),
+            title: self.title(),
             pdf_eval: pdf_points(
                 values,
                 |v| self.pdf(v),
@@ -28,7 +28,7 @@ impl Summary<f64> for SR::FisherSnedecor {
         }
     }
 
-    fn header(&self) -> String {
+    fn title(&self) -> String {
         format!("X ~ F({m},{n})", m = self.freedom_1(), n = self.freedom_2())
     }
 }

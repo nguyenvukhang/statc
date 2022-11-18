@@ -19,19 +19,22 @@ pub trait ParseData {
     fn val_prob(&self) -> Result<DataPoint, ParseFloatError>;
 }
 
+fn parse(v: &str) -> Result<f64, ParseFloatError> {
+    meval::eval_str(v).or_else(|_| v.parse::<f64>())
+}
+
 impl ParseData for String {
     fn diff(&self) -> Result<DataPoint, ParseFloatError> {
         let p = self.split_once(' ').unwrap_or_default();
-        let parse = |v: &str| v.parse::<f64>();
         Ok(DataPoint { val: parse(p.0)? - parse(p.1)?, prob: 0.0 })
     }
 
     fn val_prob(&self) -> Result<DataPoint, ParseFloatError> {
         let p = self.split_once(' ').unwrap_or_default();
-        Ok(DataPoint { val: p.0.parse()?, prob: p.1.parse()? })
+        Ok(DataPoint { val: parse(p.0)?, prob: parse(p.1)? })
     }
 
     fn point(&self) -> Result<DataPoint, ParseFloatError> {
-        Ok(DataPoint { prob: 0.0, val: self.parse()? })
+        Ok(DataPoint { prob: 0.0, val: parse(self)? })
     }
 }

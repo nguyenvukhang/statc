@@ -18,7 +18,7 @@ impl Summary<u64> for SR::Binomial {
         Analysis {
             expected: self.mean(),
             variance: self.variance(),
-            header: self.header(),
+            title: self.title(),
             pdf_eval: pdf_points(
                 values,
                 |v| self.pmf(v),
@@ -28,7 +28,7 @@ impl Summary<u64> for SR::Binomial {
         }
     }
 
-    fn header(&self) -> String {
+    fn title(&self) -> String {
         let (n, p) = (self.n(), self.p());
         format!("X ~ B({n}, {p})")
     }

@@ -18,7 +18,7 @@ impl Summary<u64> for SR::Poisson {
         Analysis {
             expected: self.mean(),
             variance: self.variance(),
-            header: self.header(),
+            title: self.title(),
             pdf_eval: pdf_points(
                 values,
                 |v| self.pmf(v),
@@ -28,7 +28,7 @@ impl Summary<u64> for SR::Poisson {
         }
     }
 
-    fn header(&self) -> String {
+    fn title(&self) -> String {
         let l = self.lambda();
         format!("X ~ Poisson({l})")
     }

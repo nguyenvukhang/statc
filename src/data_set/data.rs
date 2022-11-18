@@ -1,5 +1,5 @@
 use crate::data_set::point::{DataPoint, ParseData};
-use crate::types::PEvalList;
+use crate::types::LineList;
 use crate::utils::{err, Result};
 
 #[derive(Debug)]
@@ -105,8 +105,8 @@ impl Data {
         Ok(self)
     }
 
-    pub fn export(&self) -> PEvalList {
-        let mut list = PEvalList::new();
+    pub fn export(&self) -> LineList {
+        let mut list = LineList::new();
         let mut push = |d: &str, v: &Option<f64>| match v {
             Some(v) => list.push(d, *v),
             None => (),

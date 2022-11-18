@@ -1,4 +1,4 @@
-use crate::types::PEval;
+use crate::types::Line;
 use std::fmt::Display;
 use std::result as core;
 
@@ -28,12 +28,12 @@ pub fn pdf_points<T: Display + Copy, F: Fn(T) -> f64>(
     list: &Vec<T>,
     pdf: F,
     discrete: bool,
-) -> Vec<PEval> {
+) -> Vec<Line> {
     let msg = |v: &T| match discrete {
         true => format!("P(X = {})", v),
         false => format!("pdf @ {}", v),
     };
-    list.iter().map(|v| PEval::new(&msg(v), Some(pdf(*v)))).collect()
+    list.iter().map(|v| Line::new(&msg(v), Some(pdf(*v)))).collect()
 }
 
 /// Takes a list of n points supplied by the user
@@ -43,21 +43,30 @@ pub fn pdf_points<T: Display + Copy, F: Fn(T) -> f64>(
 pub fn cdf_intervals<T: Display + Copy, F: Fn(T) -> f64>(
     list: &Vec<T>,
     cdf: F,
-) -> Vec<PEval> {
-    // first element: calculate P(X <= x)
-    let mut result = match list.first() {
-        None => return vec![],
-        Some(hi) => vec![PEval::new(&format!("P(X <= {hi})"), Some(cdf(*hi)))],
+) -> Vec<Line> {
+    let mut result = vec![];
+
+    // return empty list for an empty list
+    if list.is_empty() {
+        return result;
     };
+
+    // first element: calculate P(X <= x)
+    if let Some(x) = list.first() {
+        result.push(Line::new(&format!("P(X <= {x})"), Some(cdf(*x))))
+    }
+
     let mut iter = list.iter().peekable();
-    let mut send = |d: &str, v: f64| result.push(PEval::new(&d, Some(v)));
+    // let mut send = |d: &str, v: f64| result.push(Line::new(&d, Some(v)));
+
     while let Some(lo) = iter.next() {
-        if let Some(hi) = iter.peek() {
-            send(&format!("P({lo} < X <= {hi})"), cdf(**hi) - cdf(*lo));
-        } else {
+        let (desc, val) = match iter.peek() {
+            // middle element: calculate P(left < X <= right)
+            Some(hi) => (format!("P({lo} < X <= {hi})"), cdf(**hi) - cdf(*lo)),
             // last element: calculate P(X > x)
-            send(&format!("P(X > {lo})"), 1.0 - cdf(*lo));
-        }
+            None => (format!("P(X > {lo})"), 1.0 - cdf(*lo)),
+        };
+        result.push(Line::new(&desc, Some(val)));
     }
     return result;
 }

@@ -1,14 +1,14 @@
 mod data_set;
-mod display;
 mod distributions;
 mod math;
-mod r;
+mod printer;
 mod secret;
 mod types;
 mod utils;
 
 use clap::{Parser, Subcommand, ValueEnum};
-use types::{PEvalList, Summary};
+use types::Analysis;
+use types::{LineList, Summary};
 use utils::Result;
 
 #[derive(Parser)]
@@ -156,12 +156,27 @@ enum Commands {
         #[arg(value_name = "VARIANCE_2", value_parser = utils::eval)]
         v2: f64,
     },
-    #[command(about = "Compare two samples")]
-    Comp {
+    #[command(about = "Compare two data samples")]
+    Compd {
         #[arg(value_name = "FILE_1")]
         f1: String,
         #[arg(value_name = "FILE_2")]
         f2: String,
+    },
+    #[command(about = "Compare two samples by summary")]
+    Comps {
+        #[arg(value_name = "SIZE_1")]
+        n1: u64,
+        #[arg(value_name = "MEAN_1")]
+        m1: f64,
+        #[arg(value_name = "STD_DEV_1")]
+        s1: f64,
+        #[arg(value_name = "SIZE_2")]
+        n2: u64,
+        #[arg(value_name = "MEAN_2")]
+        m2: f64,
+        #[arg(value_name = "STD_DEV_2")]
+        s2: f64,
     },
     #[command(about = "Compare difference of two samples")]
     Diff {
@@ -186,85 +201,92 @@ fn send(v: impl std::fmt::Display) {
     println!("{}", v);
 }
 
+fn process(mut a: Analysis) {
+    a.round();
+    send(a);
+}
+
 fn run(cli: Cli) -> Result<()> {
     use distributions::{self as dist};
     match cli.command {
         Commands::Binom { n, p, x } => {
             let dist = dist::Binomial::new(n, p)?;
-            send(dist.analyze(&x).round());
+            process(dist.analyze(&x));
         }
         Commands::Nbinom { k, p, x } => {
             let dist = dist::NegativeBinomial::new(k, p)?;
-            send(dist.analyze(&x).round());
+            process(dist.analyze(&x));
         }
         Commands::Geom { p, x } => {
             let dist = dist::Geometric::new(p)?;
-            send(dist.analyze(&x).round());
+            process(dist.analyze(&x));
         }
         Commands::Pois { l, x } => {
             let dist = dist::Poisson::new(l)?;
-            send(dist.analyze(&x).round());
+            process(dist.analyze(&x));
         }
         Commands::Unif { a, b, x } => {
             let dist = dist::Uniform::new(a, b)?;
-            send(dist.analyze(&x).round());
+            process(dist.analyze(&x));
         }
         Commands::Exp { l, x } => {
             let dist = dist::Exponential::new(l)?;
-            send(dist.analyze(&x).round());
+            process(dist.analyze(&x));
         }
         Commands::Norm { m, s, x } => {
             let dist = dist::Normal::new(m, s)?;
-            send(dist.analyze(&x).round());
+            process(dist.analyze(&x));
         }
         Commands::T { f, x } => {
             let dist = dist::StudentsT::new(f)?;
-            send(dist.analyze(&x).round());
+            process(dist.analyze(&x));
         }
         Commands::Chisq { n, x } => {
             let dist = dist::ChiSquared::new(n)?;
-            send(dist.analyze(&x).round());
+            process(dist.analyze(&x));
         }
         Commands::F { m, n, x } => {
             let dist = dist::FisherSnedecor::new(m, n)?;
-            send(dist.analyze(&x).round());
+            process(dist.analyze(&x));
         }
         Commands::Ichisq { n, x } => {
             let dist = dist::ChiSquared::new(n)?;
             use statrs::distribution::ContinuousCDF;
-            send(dist.header());
+            send(dist.title());
             let res = dist.inverse_cdf(1.0 - x);
             send(format!("P(X > {res}) = {x}"));
         }
         Commands::Inorm { m, s, x, a } => {
             let dist = dist::Normal::new(m, s)?;
             use statrs::distribution::ContinuousCDF;
-            send(dist.header());
             match a {
                 Area::Left => {
                     let res = dist.inverse_cdf(x);
+                    send(dist.title());
                     send(format!("P(X < {res}) = {x}"));
                 }
                 Area::Right => {
                     let res = -dist.inverse_cdf(x);
+                    send(dist.title());
                     send(format!("P(X > {res}) = {x}"));
                 }
                 Area::Mid => {
-                    let mut plist = PEvalList::new();
+                    let mut list = LineList::new();
+                    list.set_title(&dist.title());
                     let d = x / 2.0;
                     let lo = dist.inverse_cdf(0.5 - d);
                     let hi = dist.inverse_cdf(0.5 + d);
-                    plist.push("a: left bound", lo);
-                    plist.push("b: right bound", hi);
-                    plist.push(&format!("P(a < X <= b)"), x);
-                    send(plist);
+                    list.push("a: left bound", lo);
+                    list.push("b: right bound", hi);
+                    list.push(&format!("P(a < X <= b)"), x);
+                    send(list)
                 }
             }
         }
         Commands::It { f, a, x } => {
             let dist = dist::StudentsT::new(f)?;
             use statrs::distribution::ContinuousCDF;
-            send(dist.header());
+            send(dist.title());
             match a {
                 Area::Left => {
                     let res = dist.inverse_cdf(x);
@@ -275,14 +297,15 @@ fn run(cli: Cli) -> Result<()> {
                     send(format!("P(X > {res}) = {x}"));
                 }
                 Area::Mid => {
-                    let mut plist = PEvalList::new();
+                    let mut list = LineList::new();
+                    list.set_title(&dist.title());
                     let d = x / 2.0;
                     let lo = dist.inverse_cdf(0.5 - d);
                     let hi = dist.inverse_cdf(0.5 + d);
-                    plist.push("a: left bound", lo);
-                    plist.push("b: right bound", hi);
-                    plist.push(&format!("P(a < X <= b)"), x);
-                    send(plist)
+                    list.push("a: left bound", lo);
+                    list.push("b: right bound", hi);
+                    list.push(&format!("P(a < X <= b)"), x);
+                    send(list)
                 }
             }
         }
@@ -293,10 +316,10 @@ fn run(cli: Cli) -> Result<()> {
             let data = data_set::analyze(&file, data_set::Parser::Single)?;
             send(data.export())
         }
-        Commands::Comp { f1, f2 } => {
+        Commands::Compd { f1, f2 } => {
             let mut d1 = data_set::analyze(&f1, data_set::Parser::Single)?;
             let mut d2 = data_set::analyze(&f2, data_set::Parser::Single)?;
-            let mut list = PEvalList::new();
+            let mut list = LineList::new();
             list.header(&f1);
             list.append(&d1.export());
             list.header(&f2);
@@ -309,6 +332,10 @@ fn run(cli: Cli) -> Result<()> {
                 d2.var_s().unwrap(),
             ));
             send(list);
+        }
+        #[allow(unused_variables)]
+        Commands::Comps { n1, m1, s1, n2, m2, s2 } => {
+            send("feature unsupported")
         }
         Commands::Diff { file } => {
             let data = data_set::analyze(&file, data_set::Parser::PairDiff)?;

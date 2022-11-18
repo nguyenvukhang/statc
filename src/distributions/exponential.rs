@@ -18,7 +18,7 @@ impl Summary<f64> for SR::Exp {
         Analysis {
             expected: self.mean(),
             variance: self.variance(),
-            header: self.header(),
+            title: self.title(),
             pdf_eval: pdf_points(
                 values,
                 |v| self.pdf(v),
@@ -28,7 +28,7 @@ impl Summary<f64> for SR::Exp {
         }
     }
 
-    fn header(&self) -> String {
+    fn title(&self) -> String {
         let l = self.rate();
         format!("X ~ Exp({l})")
     }

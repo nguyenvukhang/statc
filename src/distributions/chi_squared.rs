@@ -18,7 +18,7 @@ impl Summary<f64> for SR::ChiSquared {
         Analysis {
             expected: self.mean(),
             variance: self.variance(),
-            header: self.header(),
+            title: self.title(),
             pdf_eval: pdf_points(
                 values,
                 |v| self.pdf(v),
@@ -28,7 +28,7 @@ impl Summary<f64> for SR::ChiSquared {
         }
     }
 
-    fn header(&self) -> String {
+    fn title(&self) -> String {
         format!("X ~ χ²({n})", n = self.freedom())
     }
 }

@@ -18,7 +18,7 @@ impl Summary<u64> for SR::NegativeBinomial {
         Analysis {
             expected: Some(k / p),
             variance: Some((1.0 - p) * k / p / p),
-            header: self.header(),
+            title: self.title(),
             pdf_eval: pdf_points(
                 values,
                 |v| self.pmf(v - self.r() as u64),
@@ -28,7 +28,7 @@ impl Summary<u64> for SR::NegativeBinomial {
         }
     }
 
-    fn header(&self) -> String {
+    fn title(&self) -> String {
         let (k, p) = (self.r(), self.p());
         format!("X ~ NB({k}, {p})")
     }
