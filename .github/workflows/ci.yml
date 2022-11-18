@@ -1,0 +1,66 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - "main"
+      - "dev"
+    tags:
+      - "[0-9]+.[0-9]+.[0-9]+**"
+
+jobs:
+  main:
+    name: build-release
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        build: [linux, linux-arm, macos]
+        include:
+          - build: linux
+            os: ubuntu-22.04
+            rust: nightly
+            target: x86_64-unknown-linux-musl
+          - build: linux-arm
+            os: ubuntu-22.04
+            rust: nightly
+            target: arm-unknown-linux-gnueabihf
+          - build: macos
+            os: macos-12
+            rust: nightly
+            target: x86_64-apple-darwin
+
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+          T=./target/${{ matrix.target }}
+          echo "SEMVER=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+          echo "TARGET_DIR=$T" >> $GITHUB_ENV
+          echo "BINFILE=$T/release/statc" >> $GITHUB_ENV
+      - name: Run tests
+        run: cargo test
+
+      - name: Build binary
+        run: cargo build --release
+        env:
+          CARGO_BUILD_TARGET_DIR: ${{ env.TARGET_DIR }}
+
+      - name: Strip release binary
+        if: startsWith(github.ref, 'refs/tags/') && (matrix.build == 'linux' || matrix.build == 'macos')
+        run: strip ${{ env.BINFILE }}
+
+      - name: Build archive
+        if: github.ref_type == 'tag'
+        shell: bash
+        run: |
+          staging="statc-${{ env.SEMVER }}-${{ matrix.target }}"
+          mkdir -p "$staging"
+          cp ${{ env.BINFILE }} "$staging"
+          tar czf "$staging.tar.gz" "$staging"
+          echo "ASSET=$staging.tar.gz" >> $GITHUB_ENV
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: ${{ env.ASSET }}
