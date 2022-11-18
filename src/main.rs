@@ -127,7 +127,7 @@ enum Commands {
         #[arg(value_name = "PROBABILITY", value_parser = utils::eval_prob)]
         x: f64,
     },
-    /// Reverse-engineer the Normal distribution
+    /// Reverse-engineer the Student's t-distribution
     It {
         /// degrees of freedom
         #[arg(value_name = "FREEDOM", value_parser = utils::eval_u64)]
