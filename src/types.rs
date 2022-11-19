@@ -66,6 +66,10 @@ pub trait Summary<T> {
     fn title(&self) -> String;
 }
 
+pub trait Meme<T> {
+    fn meme(&self, values: &Vec<T>) -> Analysis;
+}
+
 impl Display for Analysis {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         let mut printer = Printer::new();

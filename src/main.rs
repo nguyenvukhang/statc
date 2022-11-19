@@ -5,6 +5,7 @@ mod printer;
 mod secret;
 mod types;
 mod utils;
+mod analyze;
 
 use clap::{Parser, Subcommand, ValueEnum};
 use types::Analysis;
