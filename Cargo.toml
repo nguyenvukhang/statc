@@ -11,6 +11,7 @@ repository = "https://github.com/nguyenvukhang/statc"
 documentation = "https://github.com/nguyenvukhang/statc"
 categories = ["command-line-utilities", "mathematics", "science"]
 edition = "2021"
+autotests = false
 license = "MIT"
 
 [dependencies]
@@ -18,3 +19,16 @@ clap = { version = "4.0.19", features = ["derive"] }
 statrs = "0.16.0"
 termion = "2.0.1"
 meval = "0.2.0"
+
+[lib]
+path = "core/lib.rs"
+doctest = false
+
+[[bin]]
+bench = false
+path = "core/main.rs"
+name = "statc"
+
+[[test]]
+name = "integration"
+path = "tests/main.rs"

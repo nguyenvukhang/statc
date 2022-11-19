@@ -25,10 +25,10 @@ impl MyDist for NegativeBinomial {
 
 impl MyDiscrete for NegativeBinomial {
     fn pmf(&self, x: u64) -> f64 {
-        self.core.pmf(x - self.k)
+        x.checked_sub(self.k).map(|v| self.core.pmf(v)).unwrap_or(0.0)
     }
     fn cdf(&self, x: u64) -> f64 {
-        self.core.cdf(x - self.k)
+        x.checked_sub(self.k).map(|v| self.core.cdf(v)).unwrap_or(0.0)
     }
 }
 
