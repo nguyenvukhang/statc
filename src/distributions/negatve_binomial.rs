@@ -1,5 +1,4 @@
 use crate::distributions::{build, MyDiscrete, MyDist, NegativeBinomial};
-use crate::types::{Analysis, Summary};
 use crate::utils::Result;
 use statrs::distribution as SR;
 use statrs::distribution::{Discrete, DiscreteCDF};
@@ -19,6 +18,9 @@ impl MyDist for NegativeBinomial {
         let (k, p) = (self.k as f64, self.p);
         Some((1.0 - p) * k / p / p)
     }
+    fn title(&self) -> String {
+        format!("X ~ NB({k}, {p})", k = self.k, p = self.p)
+    }
 }
 
 impl MyDiscrete for NegativeBinomial {
@@ -30,16 +32,6 @@ impl MyDiscrete for NegativeBinomial {
     }
 }
 
-impl Summary<u64> for NegativeBinomial {
-    fn analyze(&self, values: &Vec<u64>) -> Analysis {
-        Analysis::default()
-    }
-
-    fn title(&self) -> String {
-        format!("X ~ NB({k}, {p})", k = self.k, p = self.p)
-    }
-}
-
 #[test]
 fn test() -> Result<()> {
     // if X ~ NB(k, p), then
@@ -47,12 +39,12 @@ fn test() -> Result<()> {
     // * var(X) = (1-p)k/p²
     // * PMF finds probability of winning for the kth time on the
     //   xth trial with win-rate p.
-    let binom = NegativeBinomial::new(6, 1.0 / 6.0)?;
-    float_eq!(binom.mean().unwrap(), 36);
-    float_eq!(binom.variance().unwrap(), 180);
-    float_eq!(binom.pmf(10), 0.00130238102);
+    let dist = NegativeBinomial::new(6, 1.0 / 6.0)?;
+    float_eq!(dist.mean().unwrap(), 36);
+    float_eq!(dist.variance().unwrap(), 180);
+    float_eq!(dist.pmf(10), 0.00130238102);
 
-    let binom = NegativeBinomial::new(4, 0.55)?;
-    float_eq!(binom.pmf(6), 0.18530015624);
+    let dist = NegativeBinomial::new(4, 0.55)?;
+    float_eq!(dist.pmf(6), 0.18530015624);
     Ok(())
 }

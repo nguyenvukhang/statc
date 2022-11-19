@@ -1,3 +1,5 @@
+use crate::analyze::{cdf_intervals, pdf_points};
+use crate::distributions::{MyContinuous, MyDiscrete, MyDist};
 use crate::math::Round;
 use crate::printer::Printer;
 use std::fmt::{self, Display, Formatter};
@@ -63,7 +65,30 @@ impl Analysis {
 
 pub trait Summary<T> {
     fn analyze(&self, values: &Vec<T>) -> Analysis;
-    fn title(&self) -> String;
+}
+
+impl<D: MyDist + MyDiscrete> Summary<u64> for D {
+    fn analyze(&self, values: &Vec<u64>) -> Analysis {
+        Analysis {
+            expected: self.mean(),
+            variance: self.variance(),
+            pdf_eval: pdf_points(values, |v| self.pmf(v), true),
+            cdf_eval: cdf_intervals(values, |v| self.cdf(v)),
+            title: self.title(),
+        }
+    }
+}
+
+impl<D: MyDist + MyContinuous> Summary<f64> for D {
+    fn analyze(&self, values: &Vec<f64>) -> Analysis {
+        Analysis {
+            expected: self.mean(),
+            variance: self.variance(),
+            pdf_eval: pdf_points(values, |v| self.pdf(v), false),
+            cdf_eval: cdf_intervals(values, |v| self.cdf(v)),
+            title: self.title(),
+        }
+    }
 }
 
 pub trait Meme<T> {

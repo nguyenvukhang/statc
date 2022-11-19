@@ -10,8 +10,9 @@ mod types;
 mod utils;
 
 use clap::{Parser, Subcommand, ValueEnum};
-use types::Analysis;
-use types::{LineList, Summary};
+use distributions::*;
+use types::LineList;
+use types::{Analysis, Summary};
 use utils::Result;
 
 #[derive(Parser)]
@@ -254,22 +255,20 @@ fn run(cli: Cli) -> Result<()> {
         }
         Commands::Ichisq { n, x } => {
             let dist = dist::ChiSquared::new(n)?;
-            use statrs::distribution::ContinuousCDF;
             send(dist.title());
-            let res = dist.inverse_cdf(1.0 - x);
+            let res = dist.inv_cdf(1.0 - x);
             send(format!("P(X > {res}) = {x}"));
         }
         Commands::Inorm { m, s, x, a } => {
             let dist = dist::Normal::new(m, s)?;
-            use statrs::distribution::ContinuousCDF;
             match a {
                 Area::Left => {
-                    let res = dist.inverse_cdf(x);
+                    let res = dist.inv_cdf(x);
                     send(dist.title());
                     send(format!("P(X < {res}) = {x}"));
                 }
                 Area::Right => {
-                    let res = -dist.inverse_cdf(x);
+                    let res = -dist.inv_cdf(x);
                     send(dist.title());
                     send(format!("P(X > {res}) = {x}"));
                 }
@@ -277,8 +276,8 @@ fn run(cli: Cli) -> Result<()> {
                     let mut list = LineList::new();
                     list.set_title(&dist.title());
                     let d = x / 2.0;
-                    let lo = dist.inverse_cdf(0.5 - d);
-                    let hi = dist.inverse_cdf(0.5 + d);
+                    let lo = dist.inv_cdf(0.5 - d);
+                    let hi = dist.inv_cdf(0.5 + d);
                     list.push("a: left bound", lo);
                     list.push("b: right bound", hi);
                     list.push(&format!("P(a < X <= b)"), x);
@@ -288,23 +287,22 @@ fn run(cli: Cli) -> Result<()> {
         }
         Commands::It { f, a, x } => {
             let dist = dist::StudentsT::new(f)?;
-            use statrs::distribution::ContinuousCDF;
             send(dist.title());
             match a {
                 Area::Left => {
-                    let res = dist.inverse_cdf(x);
+                    let res = dist.inv_cdf(x);
                     send(format!("P(X < {res}) = {x}"));
                 }
                 Area::Right => {
-                    let res = -dist.inverse_cdf(x);
+                    let res = -dist.inv_cdf(x);
                     send(format!("P(X > {res}) = {x}"));
                 }
                 Area::Mid => {
                     let mut list = LineList::new();
                     list.set_title(&dist.title());
                     let d = x / 2.0;
-                    let lo = dist.inverse_cdf(0.5 - d);
-                    let hi = dist.inverse_cdf(0.5 + d);
+                    let lo = dist.inv_cdf(0.5 - d);
+                    let hi = dist.inv_cdf(0.5 + d);
                     list.push("a: left bound", lo);
                     list.push("b: right bound", hi);
                     list.push(&format!("P(a < X <= b)"), x);

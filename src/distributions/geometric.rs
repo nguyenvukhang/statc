@@ -1,6 +1,4 @@
-use crate::analyze::Analyze;
 use crate::distributions::{build, Geometric, MyDiscrete, MyDist};
-use crate::types::{Analysis, Summary};
 use crate::utils::Result;
 use statrs::distribution as SR;
 use statrs::distribution::{Discrete, DiscreteCDF};
@@ -12,22 +10,15 @@ impl Geometric {
     }
 }
 
-impl Summary<u64> for Geometric {
-    fn analyze(&self, values: &Vec<u64>) -> Analysis {
-        Analyze::discrete(&self.core, values, self.title())
-    }
-
-    fn title(&self) -> String {
-        format!("X ~ G({p})", p = self.p)
-    }
-}
-
 impl MyDist for Geometric {
     fn mean(&self) -> Option<f64> {
         self.core.mean()
     }
     fn variance(&self) -> Option<f64> {
         self.core.variance()
+    }
+    fn title(&self) -> String {
+        format!("X ~ G({p})", p = self.p)
     }
 }
 
@@ -47,9 +38,9 @@ fn test() -> Result<()> {
     // * var(X) = (1-p)/p²
     // * PMF finds probability of winning for the first time on the
     //   xth try with win-rate p
-    let binom = Geometric::new(0.05)?;
-    float_eq!(binom.mean().unwrap(), 20);
-    float_eq!(binom.variance().unwrap(), 380);
-    float_eq!(binom.pmf(5), 0.0407253125);
+    let dist = Geometric::new(0.05)?;
+    float_eq!(dist.mean().unwrap(), 20);
+    float_eq!(dist.variance().unwrap(), 380);
+    float_eq!(dist.pmf(5), 0.0407253125);
     Ok(())
 }

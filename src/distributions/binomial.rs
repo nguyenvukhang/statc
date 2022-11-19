@@ -1,6 +1,4 @@
-use crate::analyze::Analyze;
 use crate::distributions::{build, Binomial, MyDiscrete, MyDist};
-use crate::types::{Analysis, Summary};
 use crate::utils::Result;
 use statrs::distribution as SR;
 use statrs::distribution::{Discrete, DiscreteCDF};
@@ -12,22 +10,15 @@ impl Binomial {
     }
 }
 
-impl Summary<u64> for Binomial {
-    fn analyze(&self, values: &Vec<u64>) -> Analysis {
-        Analyze::discrete(&self.core, values, self.title())
-    }
-
-    fn title(&self) -> String {
-        format!("X ~ B({n}, {p})", n = self.n, p = self.p)
-    }
-}
-
 impl MyDist for Binomial {
     fn mean(&self) -> Option<f64> {
         self.core.mean()
     }
     fn variance(&self) -> Option<f64> {
         self.core.variance()
+    }
+    fn title(&self) -> String {
+        format!("X ~ B({n}, {p})", n = self.n, p = self.p)
     }
 }
 
@@ -47,15 +38,15 @@ fn test() -> Result<()> {
     // * var(X) = np(1−p)
     // * X is the number of successes in n Bernoulli trials of
     //   win-rate p.
-    let binom = Binomial::new(10, 0.5)?;
-    float_eq!(binom.mean().unwrap(), 5.0);
-    float_eq!(binom.variance().unwrap(), 2.5);
-    float_eq!(binom.pmf(6), 0.205078125);
+    let dist = Binomial::new(10, 0.5)?;
+    float_eq!(dist.mean().unwrap(), 5.0);
+    float_eq!(dist.variance().unwrap(), 2.5);
+    float_eq!(dist.pmf(6), 0.205078125);
 
-    let binom = Binomial::new(10, 0.2)?;
-    float_eq!(binom.mean().unwrap(), 2);
-    float_eq!(binom.variance().unwrap(), 1.6);
-    float_eq!(binom.pmf(2), 0.301989888);
-    float_eq!(binom.cdf(4), 0.9672065024);
+    let dist = Binomial::new(10, 0.2)?;
+    float_eq!(dist.mean().unwrap(), 2);
+    float_eq!(dist.variance().unwrap(), 1.6);
+    float_eq!(dist.pmf(2), 0.301989888);
+    float_eq!(dist.cdf(4), 0.9672065024);
     Ok(())
 }
