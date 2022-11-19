@@ -1,14 +1,39 @@
-use crate::analyze::{cdf_intervals, pdf_points, Analyze};
+use crate::analyze::Analyze;
 use crate::types::{Analysis, Summary};
 use crate::utils::{Result, ResultOps};
-use statrs::distribution::{self as SR, Discrete, DiscreteCDF};
+use statrs::distribution::{self as SR};
 use statrs::statistics::{Distribution, Max, Min};
 
+mod binomial;
+mod geometric;
+mod negatve_binomial;
+mod poisson;
+
 // discrete distributions
-pub struct Binomial {}
-pub struct NegativeBinomial {}
-pub struct Geometric {}
-pub struct Poisson {}
+pub struct Binomial {
+    core: SR::Binomial,
+    /// number of trials
+    pub n: u64,
+    /// win-rate
+    pub p: f64,
+}
+pub struct NegativeBinomial {
+    core: SR::NegativeBinomial,
+    /// required number of wins
+    pub k: u64,
+    /// win-rate
+    pub p: f64,
+}
+pub struct Geometric {
+    core: SR::Geometric,
+    /// win-rate
+    pub p: f64,
+}
+pub struct Poisson {
+    core: SR::Poisson,
+    /// expected
+    pub l: f64,
+}
 // continuous distributions
 pub struct Uniform {}
 pub struct Exponential {}
@@ -17,65 +42,23 @@ pub struct StudentsT {}
 pub struct ChiSquared {}
 pub struct FisherSnedecor {}
 
-impl Binomial {
-    pub fn new(n: u64, p: f64) -> Result<SR::Binomial> {
-        SR::Binomial::new(p, n).serr("Bad parameters.")
-    }
+trait MyDist {
+    fn mean(&self) -> Option<f64>;
+    fn variance(&self) -> Option<f64>;
 }
 
-impl Summary<u64> for SR::Binomial {
-    fn analyze(&self, values: &Vec<u64>) -> Analysis {
-        Analyze::discrete(self, values, self.title())
-    }
-
-    fn title(&self) -> String {
-        format!("X ~ B({n}, {p})", n = self.n(), p = self.p())
-    }
+trait MyDiscrete {
+    fn pmf(&self, x: u64) -> f64;
+    fn cdf(&self, x: u64) -> f64;
 }
 
-impl NegativeBinomial {
-    pub fn new(k: u64, p: f64) -> Result<SR::NegativeBinomial> {
-        SR::NegativeBinomial::new(k as f64, p).serr("Bad parameters.")
-    }
+trait MyContinuous {
+    fn pdf(&self, x: u64) -> f64;
+    fn cdf(&self, x: u64) -> f64;
 }
 
-impl Summary<u64> for SR::NegativeBinomial {
-    fn analyze(&self, values: &Vec<u64>) -> Analysis {
-        let (k, p) = (self.r(), self.p());
-        Analysis {
-            expected: Some(k / p),
-            variance: Some((1.0 - p) * k / p / p),
-            title: self.title(),
-            pdf_eval: pdf_points(values, |v| self.pmf(v - k as u64), true),
-            cdf_eval: cdf_intervals(values, |v| self.cdf(v - k as u64)),
-        }
-    }
-
-    fn title(&self) -> String {
-        format!("X ~ NB({k}, {p})", k = self.r(), p = self.p())
-    }
-}
-
-impl Geometric {
-    pub fn new(p: f64) -> Result<SR::Geometric> {
-        SR::Geometric::new(p).serr("Bad parameters.")
-    }
-}
-
-impl Summary<u64> for SR::Geometric {
-    fn analyze(&self, values: &Vec<u64>) -> Analysis {
-        Analyze::discrete(self, values, self.title())
-    }
-
-    fn title(&self) -> String {
-        format!("X ~ G({p})", p = self.p())
-    }
-}
-
-impl Poisson {
-    pub fn new(l: f64) -> Result<SR::Poisson> {
-        SR::Poisson::new(l).serr("Bad parameters.")
-    }
+fn build<T>(r: std::result::Result<T, statrs::StatsError>) -> Result<T> {
+    r.map_err(|v| v.to_string())
 }
 
 impl Summary<u64> for SR::Poisson {

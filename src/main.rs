@@ -1,3 +1,6 @@
+#[macro_use]
+mod macros;
+mod analyze;
 mod data_set;
 mod distributions;
 mod math;
@@ -5,7 +8,6 @@ mod printer;
 mod secret;
 mod types;
 mod utils;
-mod analyze;
 
 use clap::{Parser, Subcommand, ValueEnum};
 use types::Analysis;
@@ -347,7 +349,7 @@ fn run(cli: Cli) -> Result<()> {
             Err(_) => send("Invalid expression."),
         },
         _ => {
-            println!("{}", secret::SECRET.trim());
+            println!("{}", secret::rot13(secret::SECRET.trim()));
         }
     }
     Ok(())
