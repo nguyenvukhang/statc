@@ -1,8 +1,8 @@
-use crate::distributions::{build, ChiSquared, MyContinuous, MyDist};
+use crate::distributions::{build, ChiSquared, Continuous, Distribution};
 use crate::utils::Result;
 use statrs::distribution as SR;
-use statrs::distribution::{Continuous, ContinuousCDF};
-use statrs::statistics::Distribution;
+use statrs::distribution::{Continuous as Y, ContinuousCDF};
+use statrs::statistics::Distribution as X;
 
 impl ChiSquared {
     pub fn new(freedom: u64) -> Result<ChiSquared> {
@@ -11,7 +11,7 @@ impl ChiSquared {
     }
 }
 
-impl MyDist for ChiSquared {
+impl Distribution for ChiSquared {
     fn mean(&self) -> Option<f64> {
         self.core.mean()
     }
@@ -23,7 +23,7 @@ impl MyDist for ChiSquared {
     }
 }
 
-impl MyContinuous for ChiSquared {
+impl Continuous for ChiSquared {
     fn pdf(&self, x: f64) -> f64 {
         self.core.pdf(x)
     }

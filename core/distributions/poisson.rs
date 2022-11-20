@@ -1,8 +1,8 @@
-use crate::distributions::{build, MyDiscrete, MyDist, Poisson};
+use crate::distributions::{build, Discrete, Distribution, Poisson};
 use crate::utils::Result;
 use statrs::distribution as SR;
-use statrs::distribution::{Discrete, DiscreteCDF};
-use statrs::statistics::Distribution;
+use statrs::distribution::{Discrete as Y, DiscreteCDF};
+use statrs::statistics::Distribution as X;
 
 impl Poisson {
     pub fn new(l: f64) -> Result<Poisson> {
@@ -10,7 +10,7 @@ impl Poisson {
     }
 }
 
-impl MyDist for Poisson {
+impl Distribution for Poisson {
     fn mean(&self) -> Option<f64> {
         self.core.mean()
     }
@@ -22,7 +22,7 @@ impl MyDist for Poisson {
     }
 }
 
-impl MyDiscrete for Poisson {
+impl Discrete for Poisson {
     fn pmf(&self, x: u64) -> f64 {
         self.core.pmf(x)
     }

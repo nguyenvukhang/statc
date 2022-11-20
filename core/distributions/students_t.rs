@@ -1,8 +1,8 @@
-use crate::distributions::{build, MyContinuous, MyDist, StudentsT};
+use crate::distributions::{build, Continuous, Distribution, StudentsT};
 use crate::utils::Result;
 use statrs::distribution as SR;
-use statrs::distribution::{Continuous, ContinuousCDF};
-use statrs::statistics::Distribution;
+use statrs::distribution::{Continuous as Y, ContinuousCDF};
+use statrs::statistics::Distribution as X;
 
 impl StudentsT {
     pub fn new(freedom: u64) -> Result<StudentsT> {
@@ -11,7 +11,7 @@ impl StudentsT {
     }
 }
 
-impl MyDist for StudentsT {
+impl Distribution for StudentsT {
     fn mean(&self) -> Option<f64> {
         self.core.mean()
     }
@@ -23,7 +23,7 @@ impl MyDist for StudentsT {
     }
 }
 
-impl MyContinuous for StudentsT {
+impl Continuous for StudentsT {
     fn pdf(&self, x: f64) -> f64 {
         self.core.pdf(x)
     }

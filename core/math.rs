@@ -1,4 +1,4 @@
-use crate::types::LineList;
+use crate::display::LineList;
 
 pub trait MathOps {
     fn pow(self, exponent: u64) -> Self;

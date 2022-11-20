@@ -1,8 +1,8 @@
-use crate::distributions::{build, MyContinuous, MyDist, Uniform};
+use crate::distributions::{build, Distribution, Continuous, Uniform};
 use crate::utils::Result;
 use statrs::distribution as SR;
-use statrs::distribution::{Continuous, ContinuousCDF};
-use statrs::statistics::Distribution;
+use statrs::distribution::{Continuous as Y, ContinuousCDF};
+use statrs::statistics::Distribution as X;
 
 impl Uniform {
     pub fn new(min: f64, max: f64) -> Result<Uniform> {
@@ -10,7 +10,7 @@ impl Uniform {
     }
 }
 
-impl MyDist for Uniform {
+impl Distribution for Uniform {
     fn mean(&self) -> Option<f64> {
         self.core.mean()
     }
@@ -22,7 +22,7 @@ impl MyDist for Uniform {
     }
 }
 
-impl MyContinuous for Uniform {
+impl Continuous for Uniform {
     fn pdf(&self, x: f64) -> f64 {
         self.core.pdf(x)
     }

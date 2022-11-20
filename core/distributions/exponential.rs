@@ -1,8 +1,8 @@
-use crate::distributions::{build, Exponential, MyContinuous, MyDist};
+use crate::distributions::{build, Exponential, Continuous, Distribution};
 use crate::utils::Result;
 use statrs::distribution as SR;
-use statrs::distribution::{Continuous, ContinuousCDF};
-use statrs::statistics::Distribution;
+use statrs::distribution::{Continuous as Y, ContinuousCDF};
+use statrs::statistics::Distribution as X;
 
 impl Exponential {
     pub fn new(l: f64) -> Result<Exponential> {
@@ -10,7 +10,7 @@ impl Exponential {
     }
 }
 
-impl MyDist for Exponential {
+impl Distribution for Exponential {
     fn mean(&self) -> Option<f64> {
         self.core.mean()
     }
@@ -22,7 +22,7 @@ impl MyDist for Exponential {
     }
 }
 
-impl MyContinuous for Exponential {
+impl Continuous for Exponential {
     fn pdf(&self, x: f64) -> f64 {
         self.core.pdf(x)
     }

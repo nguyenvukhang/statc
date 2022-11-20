@@ -1,8 +1,8 @@
-use crate::distributions::{build, Geometric, MyDiscrete, MyDist};
+use crate::distributions::{build, Geometric, Discrete, Distribution};
 use crate::utils::Result;
 use statrs::distribution as SR;
-use statrs::distribution::{Discrete, DiscreteCDF};
-use statrs::statistics::Distribution;
+use statrs::distribution::{Discrete as Y, DiscreteCDF};
+use statrs::statistics::Distribution as X;
 
 impl Geometric {
     pub fn new(p: f64) -> Result<Geometric> {
@@ -10,7 +10,7 @@ impl Geometric {
     }
 }
 
-impl MyDist for Geometric {
+impl Distribution for Geometric {
     fn mean(&self) -> Option<f64> {
         self.core.mean()
     }
@@ -22,7 +22,7 @@ impl MyDist for Geometric {
     }
 }
 
-impl MyDiscrete for Geometric {
+impl Discrete for Geometric {
     fn pmf(&self, x: u64) -> f64 {
         self.core.pmf(x)
     }

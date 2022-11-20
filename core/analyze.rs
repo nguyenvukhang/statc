@@ -1,4 +1,4 @@
-use crate::types::Line;
+use crate::display::Line;
 use std::fmt::Display;
 
 /// Takes a list of points supplied by the user

@@ -1,8 +1,8 @@
-use crate::distributions::{build, FisherSnedecor, MyContinuous, MyDist};
+use crate::distributions::{build, FisherSnedecor, Continuous, Distribution};
 use crate::utils::Result;
 use statrs::distribution as SR;
-use statrs::distribution::{Continuous, ContinuousCDF};
-use statrs::statistics::Distribution;
+use statrs::distribution::{Continuous as Y, ContinuousCDF};
+use statrs::statistics::Distribution as X;
 
 impl FisherSnedecor {
     pub fn new(f1: u64, f2: u64) -> Result<FisherSnedecor> {
@@ -11,7 +11,7 @@ impl FisherSnedecor {
     }
 }
 
-impl MyDist for FisherSnedecor {
+impl Distribution for FisherSnedecor {
     fn mean(&self) -> Option<f64> {
         self.core.mean()
     }
@@ -23,7 +23,7 @@ impl MyDist for FisherSnedecor {
     }
 }
 
-impl MyContinuous for FisherSnedecor {
+impl Continuous for FisherSnedecor {
     fn pdf(&self, x: f64) -> f64 {
         self.core.pdf(x)
     }

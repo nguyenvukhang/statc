@@ -1,7 +1,7 @@
-use crate::distributions::{build, MyDiscrete, MyDist, NegativeBinomial};
+use crate::distributions::{build, Discrete, Distribution, NegativeBinomial};
 use crate::utils::Result;
 use statrs::distribution as SR;
-use statrs::distribution::{Discrete, DiscreteCDF};
+use statrs::distribution::{Discrete as Y, DiscreteCDF};
 
 impl NegativeBinomial {
     pub fn new(k: u64, p: f64) -> Result<NegativeBinomial> {
@@ -10,7 +10,7 @@ impl NegativeBinomial {
     }
 }
 
-impl MyDist for NegativeBinomial {
+impl Distribution for NegativeBinomial {
     fn mean(&self) -> Option<f64> {
         Some(self.k as f64 / self.p)
     }
@@ -23,7 +23,7 @@ impl MyDist for NegativeBinomial {
     }
 }
 
-impl MyDiscrete for NegativeBinomial {
+impl Discrete for NegativeBinomial {
     fn pmf(&self, x: u64) -> f64 {
         x.checked_sub(self.k).map(|v| self.core.pmf(v)).unwrap_or(0.0)
     }

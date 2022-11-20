@@ -2,18 +2,19 @@
 mod macros;
 mod analyze;
 mod data_set;
+mod display;
 mod distributions;
+mod inverse;
 mod math;
 mod printer;
 mod secret;
-mod types;
+mod summary;
 mod utils;
 
 use clap::{Parser, Subcommand, ValueEnum};
-use distributions::*;
-use math::Round;
-use types::LineList;
-use types::{Analysis, Summary};
+use display::{Analysis, LineList};
+use inverse::Invert;
+use summary::Summary;
 use utils::Result;
 
 #[derive(Parser)]
@@ -26,7 +27,7 @@ struct Cli {
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
-enum Area {
+pub enum Area {
     Left,
     Mid,
     Right,
@@ -130,7 +131,7 @@ enum Commands {
         #[arg(value_name = "AREA", value_enum)]
         a: Area,
         #[arg(value_name = "PROBABILITY", value_parser = utils::eval_prob)]
-        x: f64,
+        p: f64,
     },
     /// Reverse-engineer the Student's t-distribution
     It {
@@ -140,7 +141,7 @@ enum Commands {
         #[arg(value_name = "AREA", value_enum)]
         a: Area,
         #[arg(value_name = "PROBABILITY", value_parser = utils::eval_prob)]
-        x: f64,
+        p: f64,
     },
     /// Reverse-engineer the Chi-squared distribution
     Ichisq {
@@ -148,7 +149,7 @@ enum Commands {
         #[arg(value_name = "FREEDOM", value_parser = utils::eval_u64)]
         n: u64,
         #[arg(value_name = "PROBABILITY", value_parser = utils::eval_prob)]
-        x: f64,
+        p: f64,
     },
     #[command(about = "Pooled sample variance")]
     Vpool {
@@ -254,63 +255,14 @@ fn run(cli: Cli) -> Result<()> {
             let dist = dist::FisherSnedecor::new(m, n)?;
             process(dist.analyze(&x));
         }
-        Commands::Ichisq { n, x } => {
-            let dist = dist::ChiSquared::new(n)?;
-            send(dist.title());
-            let res = dist.inv_cdf(1.0 - x);
-            send(format!("P(X > {res}) = {x}", res = res.roundn(10)));
+        Commands::Ichisq { n, p } => {
+            send(dist::ChiSquared::new(n)?.invert(Area::Right, p));
         }
-        Commands::Inorm { m, s, x, a } => {
-            let dist = dist::Normal::new(m, s)?;
-            match a {
-                Area::Left => {
-                    let res = dist.inv_cdf(x);
-                    send(dist.title());
-                    send(format!("P(X < {res}) = {x}", res = res.roundn(10)));
-                }
-                Area::Right => {
-                    let res = -dist.inv_cdf(x);
-                    send(dist.title());
-                    send(format!("P(X > {res}) = {x}", res = res.roundn(10)));
-                }
-                Area::Mid => {
-                    let mut list = LineList::new();
-                    list.set_title(&dist.title());
-                    let d = x / 2.0;
-                    let lo = dist.inv_cdf(0.5 - d);
-                    let hi = dist.inv_cdf(0.5 + d);
-                    list.push("a: left bound", lo);
-                    list.push("b: right bound", hi);
-                    list.push(&format!("P(a < X <= b)"), x);
-                    send(list)
-                }
-            }
+        Commands::Inorm { a, m, s, p } => {
+            send(dist::Normal::new(m, s)?.invert(a, p));
         }
-        Commands::It { f, a, x } => {
-            let dist = dist::StudentsT::new(f)?;
-            match a {
-                Area::Left => {
-                    let res = dist.inv_cdf(x);
-                    send(dist.title());
-                    send(format!("P(X < {res}) = {x}", res = res.roundn(10)));
-                }
-                Area::Right => {
-                    let res = -dist.inv_cdf(x);
-                    send(dist.title());
-                    send(format!("P(X > {res}) = {x}", res = res.roundn(10)));
-                }
-                Area::Mid => {
-                    let mut list = LineList::new();
-                    list.set_title(&dist.title());
-                    let d = x / 2.0;
-                    let lo = dist.inv_cdf(0.5 - d);
-                    let hi = dist.inv_cdf(0.5 + d);
-                    list.push("a: left bound", lo);
-                    list.push("b: right bound", hi);
-                    list.push(&format!("P(a < X <= b)"), x);
-                    send(list)
-                }
-            }
+        Commands::It { a, f, p } => {
+            send(dist::StudentsT::new(f)?.invert(a, p));
         }
         Commands::Vpool { v1, v2, n1, n2 } => {
             send(math::pooled_variance(n1 as f64, v1, n2 as f64, v2))

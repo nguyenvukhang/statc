@@ -1,5 +1,5 @@
 use crate::data_set::point::{DataPoint, ParseData};
-use crate::types::LineList;
+use crate::display::LineList;
 use crate::utils::{err, Result};
 
 #[derive(Debug)]

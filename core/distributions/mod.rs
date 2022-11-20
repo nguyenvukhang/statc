@@ -77,18 +77,18 @@ pub struct FisherSnedecor {
     f2: u64,
 }
 
-pub trait MyDist {
+pub trait Distribution {
     fn mean(&self) -> Option<f64>;
     fn variance(&self) -> Option<f64>;
     fn title(&self) -> String;
 }
 
-pub trait MyDiscrete {
+pub trait Discrete {
     fn pmf(&self, x: u64) -> f64;
     fn cdf(&self, x: u64) -> f64;
 }
 
-pub trait MyContinuous {
+pub trait Continuous {
     fn pdf(&self, x: f64) -> f64;
     fn cdf(&self, x: f64) -> f64;
     fn inv_cdf(&self, x: f64) -> f64;

@@ -1,4 +1,4 @@
-use crate::types::Line;
+use crate::display::Line;
 use std::fmt::{self, Display, Formatter};
 
 fn margin(left: impl Display, right: impl Display, margin: usize) -> String {

@@ -1,8 +1,8 @@
-use crate::distributions::{build, Binomial, MyDiscrete, MyDist};
+use crate::distributions::{build, Binomial, Discrete, Distribution};
 use crate::utils::Result;
 use statrs::distribution as SR;
-use statrs::distribution::{Discrete, DiscreteCDF};
-use statrs::statistics::Distribution;
+use statrs::distribution::{Discrete as Y, DiscreteCDF};
+use statrs::statistics::Distribution as X;
 
 impl Binomial {
     pub fn new(n: u64, p: f64) -> Result<Binomial> {
@@ -10,7 +10,7 @@ impl Binomial {
     }
 }
 
-impl MyDist for Binomial {
+impl Distribution for Binomial {
     fn mean(&self) -> Option<f64> {
         self.core.mean()
     }
@@ -22,7 +22,7 @@ impl MyDist for Binomial {
     }
 }
 
-impl MyDiscrete for Binomial {
+impl Discrete for Binomial {
     fn pmf(&self, x: u64) -> f64 {
         self.core.pmf(x)
     }
