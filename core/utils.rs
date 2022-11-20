@@ -21,11 +21,11 @@ impl<T, E> ResultOps<T, E> for core::Result<T, E> {
 }
 
 pub fn eval(s: &str) -> Result<f64> {
-    return meval::eval_str(s).serr("Bad input.");
+    return meval::eval_str(s).serr("Invalid expression.");
 }
 
 pub fn eval_prob(s: &str) -> Result<f64> {
-    let p = meval::eval_str(s).serr("Bad input.")?;
+    let p = meval::eval_str(s).serr("Invalid expression.")?;
     if p < 0.0 || p > 1.0 {
         return err("Probability values must be between 0 and 1.");
     }
@@ -33,7 +33,7 @@ pub fn eval_prob(s: &str) -> Result<f64> {
 }
 
 pub fn eval_u64(s: &str) -> Result<u64> {
-    let v = meval::eval_str(s).serr("Bad input.")?;
+    let v = meval::eval_str(s).serr("Invalid expression.")?;
     match v.fract() > 1e-10 {
         true => err("Not an integer."),
         false => Ok(v as u64),

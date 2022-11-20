@@ -37,29 +37,3 @@ received:
         }
     };
 }
-
-#[macro_export]
-macro_rules! assert_ne_pretty {
-    ($expected:expr, $received:expr) => {
-        let expected = &*$expected;
-        let received = &*$received;
-        if expected == received {
-            panic!(
-                "
-printed outputs are the same!
-
-expected:
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-{}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-received:
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-{}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-",
-                expected, received
-            );
-        }
-    };
-}

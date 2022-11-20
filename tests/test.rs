@@ -63,7 +63,11 @@ impl Test {
     /// Runs a `statc` command at a relative path from the test
     /// directory and populates `self.received` with output
     pub fn statc(&mut self, args: &str) -> &mut Self {
-        self.received = self.bin().args(args.split(' ')).outputs();
+        self.received = self
+            .bin()
+            .current_dir(&self.test_dir)
+            .args(args.split(' '))
+            .outputs();
         self
     }
 
@@ -75,7 +79,20 @@ impl Test {
         if args.len() == 0 {
             return self;
         }
-        self.received = Command::new(args[0]).args(&args[1..]).outputs();
+        self.received = Command::new(args[0])
+            .current_dir(&self.test_dir)
+            .args(&args[1..])
+            .outputs();
+        self
+    }
+
+    /// Write text to a file
+    pub fn file_with_text(&mut self, rel_path: &str, text: &str) -> &mut Self {
+        use std::fs::File;
+        let file = self.test_dir.join(rel_path);
+        let mut file = File::create(file).unwrap();
+        use std::io::prelude::Write;
+        file.write_all(text.as_bytes()).ok();
         self
     }
 
@@ -95,16 +112,6 @@ impl Test {
         self.asserted_once = true;
         assert_eq_pretty!(&self.expected.stdout, &self.received.stdout);
         assert_eq_pretty!(&self.expected.stderr, &self.received.stderr);
-        self
-    }
-
-    /// negated assert
-    /// checks that stdout and stderr both don't match the expected values
-    /// useful for asserting non-empty output
-    pub fn assert_ne(&mut self) -> &mut Self {
-        self.asserted_once = true;
-        assert_ne_pretty!(&self.expected.stdout, &self.received.stdout);
-        assert_ne_pretty!(&self.expected.stderr, &self.received.stderr);
         self
     }
 }

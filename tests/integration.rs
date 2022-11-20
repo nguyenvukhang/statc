@@ -462,16 +462,137 @@ P(X > x)      | 0.9
 }
 
 #[test]
-#[ignore]
-fn template() {
-    statc_test!().statc("").expect_stdout(
+fn vpool_test() {
+    statc_test!().statc("vpool 3 2.3 4 5.4").expect_stdout(
         "
 ---
+[1] sample size        | 3
+[1] sample variance    | 2.3
+[2] sample size        | 4
+[2] sample variance    | 5.4
+pooled sample variance | 4.16
+pooled sample std.dev  | 2.0396078054
 ",
     );
 }
 
 #[test]
-fn secret_test() {
-    statc_test!().statc("secret").expect_stderr(" ").assert_ne();
+fn eval_test() {
+    statc_test!().statc("eval 1+2+3+4").expect_stdout("10\n");
+    statc_test!().statc("eval 5/2").expect_stdout("2.5\n");
+}
+
+#[test]
+fn data_test() {
+    statc_test!()
+        .file_with_text(
+            "cool_filename",
+            "
+10
+20
+30
+50",
+        )
+        .statc("data cool_filename")
+        .expect_stdout(
+            "
+---
+mean                | 27.5
+population variance | 218.75
+population std.dev  | 14.7901994577
+sample variance     | 291.6666666667
+sample std.err      | 17.0782512766
+",
+        );
+
+    statc_test!()
+        .file_with_text(
+            "even_cooler_name",
+            "
+10 0.1
+20 0.2
+30 0.4
+50 0.3",
+        )
+        .statc("data even_cooler_name")
+        .expect_stdout(
+            "
+---
+mean                | 32
+population variance | 176
+population std.dev  | 13.2664991614
+sample variance     | 234.6666666667
+sample std.err      | 15.3188337241
+",
+        );
+}
+
+#[test]
+fn diff_test() {
+    statc_test!()
+        .file_with_text(
+            "cool_filename",
+            "
+10 11
+20 23
+30 35
+50 52",
+        )
+        .statc("diff cool_filename")
+        .expect_stdout(
+            "
+---
+mean                | -2.75
+population variance | 2.1875
+population std.dev  | 1.4790199458
+sample variance     | 2.9166666667
+sample std.err      | 1.7078251277
+",
+        );
+}
+
+#[test]
+fn comp_test() {
+    statc_test!()
+        .file_with_text(
+            "data_set_1",
+            "
+10
+20
+30
+50",
+        )
+        .file_with_text(
+            "data_set_2",
+            "
+9
+1
+4
+5",
+        )
+        .statc("comp data_set_1 data_set_2")
+        .expect_stdout(
+            "
+---
+[data_set_1]
+mean                   | 27.5
+population variance    | 218.75
+population std.dev     | 14.7901994577
+sample variance        | 291.6666666667
+sample std.err         | 17.0782512766
+[data_set_2]
+mean                   | 4.75
+population variance    | 8.1875
+population std.dev     | 2.8613807856
+sample variance        | 10.9166666667
+sample std.err         | 3.3040379336
+[pooled sample]
+[1] sample size        | 4
+[1] sample variance    | 291.6666666667
+[2] sample size        | 4
+[2] sample variance    | 10.9166666667
+pooled sample variance | 151.2916666667
+pooled sample std.dev  | 12.3000677505
+",
+        );
 }
