@@ -11,6 +11,7 @@ mod utils;
 
 use clap::{Parser, Subcommand, ValueEnum};
 use distributions::*;
+use math::Round;
 use types::LineList;
 use types::{Analysis, Summary};
 use utils::Result;
@@ -257,7 +258,7 @@ fn run(cli: Cli) -> Result<()> {
             let dist = dist::ChiSquared::new(n)?;
             send(dist.title());
             let res = dist.inv_cdf(1.0 - x);
-            send(format!("P(X > {res}) = {x}"));
+            send(format!("P(X > {res}) = {x}", res = res.roundn(10)));
         }
         Commands::Inorm { m, s, x, a } => {
             let dist = dist::Normal::new(m, s)?;
@@ -265,12 +266,12 @@ fn run(cli: Cli) -> Result<()> {
                 Area::Left => {
                     let res = dist.inv_cdf(x);
                     send(dist.title());
-                    send(format!("P(X < {res}) = {x}"));
+                    send(format!("P(X < {res}) = {x}", res = res.roundn(10)));
                 }
                 Area::Right => {
                     let res = -dist.inv_cdf(x);
                     send(dist.title());
-                    send(format!("P(X > {res}) = {x}"));
+                    send(format!("P(X > {res}) = {x}", res = res.roundn(10)));
                 }
                 Area::Mid => {
                     let mut list = LineList::new();
@@ -287,15 +288,16 @@ fn run(cli: Cli) -> Result<()> {
         }
         Commands::It { f, a, x } => {
             let dist = dist::StudentsT::new(f)?;
-            send(dist.title());
             match a {
                 Area::Left => {
                     let res = dist.inv_cdf(x);
-                    send(format!("P(X < {res}) = {x}"));
+                    send(dist.title());
+                    send(format!("P(X < {res}) = {x}", res = res.roundn(10)));
                 }
                 Area::Right => {
                     let res = -dist.inv_cdf(x);
-                    send(format!("P(X > {res}) = {x}"));
+                    send(dist.title());
+                    send(format!("P(X > {res}) = {x}", res = res.roundn(10)));
                 }
                 Area::Mid => {
                     let mut list = LineList::new();
@@ -356,4 +358,51 @@ fn run(cli: Cli) -> Result<()> {
 fn main() {
     let cli = Cli::parse();
     run(cli).map_err(|v| println!("{}", v)).ok();
+}
+
+#[test]
+#[ignore]
+fn subcommand_coverage() -> Result<()> {
+    use crate::utils::ResultOps;
+    use clap::CommandFactory;
+    use std::collections::HashMap;
+    use std::io::{BufRead, BufReader};
+    use std::process::{Command, Stdio};
+
+    // complete list of subcommands
+    let mut subcommands = Cli::command()
+        .get_subcommands()
+        .map(|v| v.get_name().to_string())
+        .map(|v| (format!("integration::{}_test: test", v), v))
+        .collect::<HashMap<_, _>>();
+
+    // list of existing tests
+    let mut cargo = Command::new("cargo");
+    cargo.args(["test", "--", "--list", "--format=terse"]);
+    let mut cargo = cargo.stdout(Stdio::piped()).spawn().serr("Can't spawn")?;
+    let tests = BufReader::new(cargo.stdout.as_mut().ok_or("bopes")?)
+        .lines()
+        .filter_map(|v| v.ok())
+        .collect::<Vec<_>>();
+
+    tests.iter().for_each(|t| {
+        subcommands.remove(t);
+    });
+    if !subcommands.is_empty() {
+        panic!(
+            "
+
+Not all commands are tested.
+
+Untested subcommands:
+{:?}
+
+({} untested)
+
+",
+            subcommands.values(),
+            subcommands.len()
+        );
+    }
+    Ok(())
 }

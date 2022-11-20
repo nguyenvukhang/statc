@@ -35,7 +35,9 @@ pub struct LineList {
 
 impl LineList {
     pub fn push(&mut self, desc: &str, val: f64) {
-        self.list.push(Line::new(desc, Some(val)));
+        let mut line = Line::new(desc, Some(val));
+        line.round();
+        self.list.push(line);
     }
     pub fn header(&mut self, header: &str) {
         self.list.push(Line::new(&format!("[{}]", header), None));

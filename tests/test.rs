@@ -67,6 +67,18 @@ impl Test {
         self
     }
 
+    /// Runs a `statc` command at a relative path from the test
+    /// directory and populates `self.received` with output
+    #[allow(unused)]
+    pub fn shell(&mut self, args: &str) -> &mut Self {
+        let args: Vec<&str> = args.split(' ').collect();
+        if args.len() == 0 {
+            return self;
+        }
+        self.received = Command::new(args[0]).args(&args[1..]).outputs();
+        self
+    }
+
     /// Set expected stdout value.
     pub fn expect_stdout(&mut self, val: &str) -> &mut Self {
         set_expected(&mut self.expected.stdout, val);
@@ -83,6 +95,16 @@ impl Test {
         self.asserted_once = true;
         assert_eq_pretty!(&self.expected.stdout, &self.received.stdout);
         assert_eq_pretty!(&self.expected.stderr, &self.received.stderr);
+        self
+    }
+
+    /// negated assert
+    /// checks that stdout and stderr both don't match the expected values
+    /// useful for asserting non-empty output
+    pub fn assert_ne(&mut self) -> &mut Self {
+        self.asserted_once = true;
+        assert_ne_pretty!(&self.expected.stdout, &self.received.stdout);
+        assert_ne_pretty!(&self.expected.stderr, &self.received.stderr);
         self
     }
 }
