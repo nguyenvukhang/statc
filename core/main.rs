@@ -41,25 +41,22 @@ mod inverse;
 mod math;
 mod printer;
 mod secret;
-mod summary;
 mod utils;
 
+use analyze::Analyze;
 use clap::{Parser, Subcommand, ValueEnum};
 use display::LineList;
 use inverse::Invert;
-use summary::Summary;
 use utils::Result;
 
 #[derive(Parser)]
 #[command(arg_required_else_help = true)]
 struct Cli {
-    #[arg(short, long, default_value_t = false)]
-    quiet: bool,
     #[command(subcommand)]
     command: Commands,
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
+#[derive(Clone, ValueEnum)]
 pub enum Area {
     Left,
     Mid,
@@ -98,7 +95,7 @@ enum Commands {
 
     /// X ~ Poisson(l)  P(get x hits in interval)
     Pois {
-        #[arg(value_name = "EXPECTED", value_parser = utils::eval)]
+        #[arg(value_name = "EXPECTED", value_parser = utils::eval_f64)]
         l: f64,
         #[arg(value_name = "HITS", value_parser = utils::eval_u64)]
         x: Vec<u64>,
@@ -106,29 +103,29 @@ enum Commands {
 
     /// X ~ U(a, b)     Uniform distribution
     Unif {
-        #[arg(value_name = "MIN", value_parser = utils::eval)]
+        #[arg(value_name = "MIN", value_parser = utils::eval_f64)]
         a: f64,
-        #[arg(value_name = "MAX", value_parser = utils::eval)]
+        #[arg(value_name = "MAX", value_parser = utils::eval_f64)]
         b: f64,
-        #[arg(value_name = "KEY_POINTS", value_parser = utils::eval)]
+        #[arg(value_name = "KEY_POINTS", value_parser = utils::eval_f64)]
         x: Vec<f64>,
     },
 
     /// X ~ Exp(l)      Exponential distribution
     Exp {
-        #[arg(value_name = "RATE", value_parser = utils::eval)]
+        #[arg(value_name = "RATE", value_parser = utils::eval_f64)]
         l: f64,
-        #[arg(value_name = "KEY_POINTS", value_parser = utils::eval)]
+        #[arg(value_name = "KEY_POINTS", value_parser = utils::eval_f64)]
         x: Vec<f64>,
     },
 
     /// X ~ N(m, s²)    Normal distribution
     Norm {
-        #[arg(value_name = "MEAN", value_parser = utils::eval)]
+        #[arg(value_name = "MEAN", value_parser = utils::eval_f64)]
         m: f64,
-        #[arg(value_name = "STD_DEV", value_parser = utils::eval)]
+        #[arg(value_name = "STD_DEV", value_parser = utils::eval_f64)]
         s: f64,
-        #[arg(value_name = "KEY_POINTS", value_parser = utils::eval)]
+        #[arg(value_name = "KEY_POINTS", value_parser = utils::eval_f64)]
         x: Vec<f64>,
     },
 
@@ -137,7 +134,7 @@ enum Commands {
         /// degrees of freedom
         #[arg(value_name = "FREEDOM", value_parser = utils::eval_u64)]
         f: u64,
-        #[arg(value_name = "KEY_POINTS", value_parser = utils::eval)]
+        #[arg(value_name = "KEY_POINTS", value_parser = utils::eval_f64)]
         x: Vec<f64>,
     },
 
@@ -146,7 +143,7 @@ enum Commands {
         /// degrees of freedom
         #[arg(value_name = "FREEDOM", value_parser = utils::eval_u64)]
         n: u64,
-        #[arg(value_name = "KEY_POINTS", value_parser = utils::eval)]
+        #[arg(value_name = "KEY_POINTS", value_parser = utils::eval_f64)]
         x: Vec<f64>,
     },
 
@@ -156,15 +153,15 @@ enum Commands {
         m: u64,
         #[arg(value_name = "FREEDOM_2", value_parser = utils::eval_u64)]
         n: u64,
-        #[arg(value_name = "KEY_POINTS", value_parser = utils::eval)]
+        #[arg(value_name = "KEY_POINTS", value_parser = utils::eval_f64)]
         x: Vec<f64>,
     },
 
     /// Reverse-engineer the Normal distribution
     Inorm {
-        #[arg(value_name = "MEAN", value_parser = utils::eval)]
+        #[arg(value_name = "MEAN", value_parser = utils::eval_f64)]
         m: f64,
-        #[arg(value_name = "STD_DEV", value_parser = utils::eval)]
+        #[arg(value_name = "STD_DEV", value_parser = utils::eval_f64)]
         s: f64,
         #[arg(value_name = "AREA", value_enum)]
         a: Area,
@@ -196,11 +193,11 @@ enum Commands {
     Vpool {
         #[arg(value_name = "SIZE_1", value_parser = utils::eval_u64)]
         n1: u64,
-        #[arg(value_name = "VARIANCE_1", value_parser = utils::eval)]
+        #[arg(value_name = "VARIANCE_1", value_parser = utils::eval_f64)]
         v1: f64,
         #[arg(value_name = "SIZE_2", value_parser = utils::eval_u64)]
         n2: u64,
-        #[arg(value_name = "VARIANCE_2", value_parser = utils::eval)]
+        #[arg(value_name = "VARIANCE_2", value_parser = utils::eval_f64)]
         v2: f64,
     },
 
@@ -239,8 +236,8 @@ fn send(v: impl std::fmt::Display) {
     println!("{}", v);
 }
 
-fn process<T>(summarizable: impl Summary<T>, x: &Vec<T>) {
-    let mut analysis = summarizable.analyze(x);
+fn process<T>(data: impl Analyze<T>, x: &Vec<T>) {
+    let mut analysis = data.analyze(x);
     analysis.round();
     send(analysis);
 }
@@ -290,7 +287,7 @@ fn run(cli: Cli) -> Result<()> {
         Commands::Diff { file } => {
             send(data_set::analyze(&file, data_set::Parser::PairDiff)?.export())
         }
-        Commands::Eval { expr } => match utils::eval(&expr.join(" ")) {
+        Commands::Eval { expr } => match utils::eval_f64(&expr.join(" ")) {
             Ok(v) => send(v),
             Err(_) => send("Invalid expression."),
         },

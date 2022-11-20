@@ -13,7 +13,7 @@ fn open_file(file: &str) -> Result<File> {
 }
 
 pub fn analyze(file: &str, parser: Parser) -> Result<Data> {
-    let lines: Vec<String> = match open_file(file) {
+    let lines = match open_file(file) {
         Err(_) => return err(&format!("Unable to open file {}", file)),
         Ok(v) => BufReader::new(v).lines().filter_map(|v| v.ok()).collect(),
     };

@@ -31,22 +31,27 @@ jobs:
             target: x86_64-apple-darwin
 
     steps:
+      # baseline checks
       - uses: actions/checkout@v3
-      - run: |
+      - run: cargo test
+
+      # release
+      - name: Configure targets
+        if: github.ref_type == 'tag'
+        run: |
           T=./target/${{ matrix.target }}
           echo "SEMVER=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
           echo "TARGET_DIR=$T" >> $GITHUB_ENV
           echo "BINFILE=$T/release/statc" >> $GITHUB_ENV
-      - name: Run tests
-        run: cargo test
 
       - name: Build binary
+        if: github.ref_type == 'tag'
         run: cargo build --release
         env:
           CARGO_BUILD_TARGET_DIR: ${{ env.TARGET_DIR }}
 
       - name: Strip release binary
-        if: startsWith(github.ref, 'refs/tags/') && (matrix.build == 'linux' || matrix.build == 'macos')
+        if: github.ref_type == 'tag' && (matrix.build == 'linux' || matrix.build == 'macos')
         run: strip ${{ env.BINFILE }}
 
       - name: Build archive
@@ -61,6 +66,6 @@ jobs:
 
       - name: Release
         uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
+        if: github.ref_type == 'tag'
         with:
           files: ${{ env.ASSET }}

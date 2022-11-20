@@ -1,6 +1,13 @@
 use crate::display::Line;
 use std::fmt::{self, Display, Formatter};
 
+pub struct Printer {
+    margin: usize,
+    lines: Vec<(String, String)>,
+    title: String,
+}
+
+/// print with a margin so that all the vertical pipes '|' line up nicely
 fn margin(left: impl Display, right: impl Display, margin: usize) -> String {
     let (l, r) = (left.to_string(), right.to_string());
     let spaces = margin.checked_sub(l.len()).unwrap_or(0);
@@ -9,17 +16,6 @@ fn margin(left: impl Display, right: impl Display, margin: usize) -> String {
         true => format!("{}", l),
         false => format!("{}{} | {}", l, spaces, r),
     }
-}
-
-struct PrintLine {
-    desc: String,
-    val: String,
-}
-
-pub struct Printer {
-    margin: usize,
-    lines: Vec<PrintLine>,
-    title: String,
 }
 
 impl Printer {
@@ -39,7 +35,7 @@ impl Printer {
         if let Some(val) = val {
             self.update_margin(desc);
             let [desc, val] = [desc.to_string(), val.to_string()];
-            self.lines.push(PrintLine { desc, val });
+            self.lines.push((desc, val));
         }
     }
 
@@ -48,13 +44,14 @@ impl Printer {
         self.update_margin(&line.desc);
         let desc = line.desc.to_string();
         let right = line.val.map(|v| v.to_string()).unwrap_or_default();
-        self.lines.push(PrintLine { desc, val: right });
+        self.lines.push((desc, right));
     }
 
+    /// compose one large string from all stored lines
     fn build(&self) -> String {
         self.lines
             .iter()
-            .map(|v| margin(&v.desc, &v.val, self.margin))
+            .map(|v| margin(&v.0, &v.1, self.margin))
             .collect::<Vec<String>>()
             .join("\n")
     }

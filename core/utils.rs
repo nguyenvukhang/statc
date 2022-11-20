@@ -20,10 +20,12 @@ impl<T, E> ResultOps<T, E> for core::Result<T, E> {
     }
 }
 
-pub fn eval(s: &str) -> Result<f64> {
+/// Evaluate a math expression to a floating-point value
+pub fn eval_f64(s: &str) -> Result<f64> {
     return meval::eval_str(s).serr("Invalid expression.");
 }
 
+/// Evaluate a math expression to a floating-point probability
 pub fn eval_prob(s: &str) -> Result<f64> {
     let p = meval::eval_str(s).serr("Invalid expression.")?;
     if p < 0.0 || p > 1.0 {
@@ -32,6 +34,7 @@ pub fn eval_prob(s: &str) -> Result<f64> {
     Ok(p)
 }
 
+/// Evaluate a math expression to an unsigned integer
 pub fn eval_u64(s: &str) -> Result<u64> {
     let v = meval::eval_str(s).serr("Invalid expression.")?;
     match v.fract() > 1e-10 {

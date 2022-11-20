@@ -1,6 +1,6 @@
 use crate::display::LineList;
 
-pub trait MathOps {
+trait MathOps {
     fn pow(self, exponent: u64) -> Self;
 }
 

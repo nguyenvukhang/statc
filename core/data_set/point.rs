@@ -1,5 +1,4 @@
 use std::fmt;
-use std::num::ParseFloatError;
 
 #[derive(Debug)]
 pub struct DataPoint {
@@ -14,27 +13,27 @@ impl fmt::Display for DataPoint {
 }
 
 pub trait ParseData {
-    fn diff(&self) -> Result<DataPoint, ParseFloatError>;
-    fn point(&self) -> Result<DataPoint, ParseFloatError>;
-    fn val_prob(&self) -> Result<DataPoint, ParseFloatError>;
+    fn diff(&self) -> Option<DataPoint>;
+    fn point(&self) -> Option<DataPoint>;
+    fn val_prob(&self) -> Option<DataPoint>;
 }
 
-fn parse(v: &str) -> Result<f64, ParseFloatError> {
-    meval::eval_str(v).or_else(|_| v.parse::<f64>())
+fn parse(v: &str) -> Option<f64> {
+    meval::eval_str(v).ok().or_else(|| v.parse::<f64>().ok())
 }
 
 impl ParseData for String {
-    fn diff(&self) -> Result<DataPoint, ParseFloatError> {
+    fn diff(&self) -> Option<DataPoint> {
         let p = self.split_once(' ').unwrap_or_default();
-        Ok(DataPoint { val: parse(p.0)? - parse(p.1)?, prob: 0.0 })
+        Some(DataPoint { val: parse(p.0)? - parse(p.1)?, prob: 0.0 })
     }
 
-    fn val_prob(&self) -> Result<DataPoint, ParseFloatError> {
+    fn val_prob(&self) -> Option<DataPoint> {
         let p = self.split_once(' ').unwrap_or_default();
-        Ok(DataPoint { val: parse(p.0)?, prob: parse(p.1)? })
+        Some(DataPoint { val: parse(p.0)?, prob: parse(p.1)? })
     }
 
-    fn point(&self) -> Result<DataPoint, ParseFloatError> {
-        Ok(DataPoint { prob: 0.0, val: parse(self)? })
+    fn point(&self) -> Option<DataPoint> {
+        Some(DataPoint { prob: 0.0, val: parse(self)? })
     }
 }

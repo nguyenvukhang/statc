@@ -15,41 +15,35 @@ pub enum Parser {
     PairDiff,
 }
 
+fn parse<A, B, F: FnMut(&A) -> Option<B>>(raw: &Vec<A>, parser: F) -> Vec<B> {
+    raw.iter().filter_map(parser).collect()
+}
+
 impl Data {
     pub fn new(raw: &Vec<String>, parser: Parser) -> Result<Self> {
-        let data: Vec<DataPoint> = match parser {
+        let data = match parser {
             Parser::Single => {
-                let b: Vec<DataPoint> = raw
-                    .iter()
-                    .map(|v| v.val_prob())
-                    .filter_map(|v| v.ok())
-                    .collect();
+                let b = parse(raw, |v| v.val_prob());
                 match b.is_empty() {
-                    true => raw
-                        .iter()
-                        .map(|v| v.point())
-                        .filter_map(|v| v.ok())
-                        .collect(),
+                    true => parse(raw, |v| v.point()),
                     false => b,
                 }
             }
-            Parser::PairDiff => {
-                raw.iter().map(|v| v.diff()).filter_map(|v| v.ok()).collect()
-            }
+            Parser::PairDiff => parse(raw, |v| v.diff()),
         };
         let mut data = Data { mean: None, var_p: None, var_s: None, data };
         data.balance();
         data.mean().ok();
         data.var_p().ok();
         data.var_s().ok();
-        data.check()
+        data.is_valid()
     }
 
     /// evenly distributes probability such that sum is 1
     /// only runs when total prob is zero.
     fn balance(&mut self) {
         let total = self.data.iter().map(|v| v.prob).reduce(|a, b| a + b);
-        if total.unwrap_or(0.0) > 1e-10 {
+        if total.is_none() || total.unwrap() > 1e-10 {
             return;
         }
         let prob = 1.0 / self.n();
@@ -94,7 +88,7 @@ impl Data {
     }
 
     /// true if and only if dataset is non-empty and total probability adds up to 1
-    pub fn check(self) -> Result<Self> {
+    pub fn is_valid(self) -> Result<Self> {
         if self.data.is_empty() {
             return err("empty dataset.");
         }

@@ -9,9 +9,6 @@ pub struct Line {
 }
 
 impl Line {
-    fn round(&mut self) {
-        self.val = self.val.map(|v| v.roundn(10));
-    }
     pub fn new(desc: &str, val: Option<f64>) -> Self {
         Self { desc: desc.to_string(), val: val.map(|v| v.roundn(10)) }
     }
@@ -33,9 +30,7 @@ pub struct LineList {
 
 impl LineList {
     pub fn push(&mut self, desc: &str, val: f64) {
-        let mut line = Line::new(desc, Some(val));
-        line.round();
-        self.list.push(line);
+        self.list.push(Line::new(desc, Some(val)));
     }
     pub fn header(&mut self, header: &str) {
         self.list.push(Line::new(&format!("[{}]", header), None));
@@ -58,8 +53,6 @@ impl Analysis {
     pub fn round(&mut self) {
         self.expected = self.expected.map(|v| v.roundn(10));
         self.variance = self.variance.map(|v| v.roundn(10));
-        self.pdf_eval.iter_mut().for_each(|v| v.round());
-        self.cdf_eval.iter_mut().for_each(|v| v.round());
     }
 }
 
