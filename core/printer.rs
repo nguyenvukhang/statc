@@ -1,9 +1,11 @@
 use crate::display::Line;
 use std::fmt::{self, Display, Formatter};
 
+struct PrintLine(String, String);
+
 pub struct Printer {
     margin: usize,
-    lines: Vec<(String, String)>,
+    lines: Vec<PrintLine>,
     title: String,
 }
 
@@ -35,7 +37,7 @@ impl Printer {
         if let Some(val) = val {
             self.update_margin(desc);
             let [desc, val] = [desc.to_string(), val.to_string()];
-            self.lines.push((desc, val));
+            self.lines.push(PrintLine(desc, val));
         }
     }
 
@@ -44,7 +46,7 @@ impl Printer {
         self.update_margin(&line.desc);
         let desc = line.desc.to_string();
         let right = line.val.map(|v| v.to_string()).unwrap_or_default();
-        self.lines.push((desc, right));
+        self.lines.push(PrintLine(desc, right));
     }
 
     /// compose one large string from all stored lines
